@@ -17,6 +17,9 @@ extern NSString *const RCTJSNavigationScheme;
 - (BOOL)webView:(RCTWKWebView *)webView
 shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
    withCallback:(RCTDirectEventBlock)callback;
+- (BOOL)webView:(RCTWKWebView *)webView
+shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
+   withCallback:(RCTDirectEventBlock)callback;
 
 @end
 

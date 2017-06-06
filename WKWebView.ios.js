@@ -189,6 +189,12 @@ var WKWebView = React.createClass({
      */
     onShouldStartLoadWithRequest: PropTypes.func,
     /**
+     * Allows custom handling of window.open() by a JS handler. Return true
+     * or false from this method to use default behavior.
+     * @platform ios
+     */
+    onShouldCreateNewWindow: PropTypes.func,
+    /**
      * Copies cookies from sharedHTTPCookieStorage when calling loadRequest.
      * Set this to true to emulate behavior of WebView component.
      */
@@ -262,6 +268,12 @@ var WKWebView = React.createClass({
       WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
     });
 
+    var onShouldCreateNewWindow = this.props.onShouldCreateNewWindow && ((event: Event) => {
+      var shouldStart = this.props.onShouldCreateNewWindow &&
+        this.props.onShouldCreateNewWindow(event.nativeEvent);
+      WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
+    });
+
     if (this.props.source && typeof this.props.source == 'object') {
       var source = Object.assign({}, this.props.source, { 
         sendCookies: this.props.sendCookies,
@@ -295,6 +307,7 @@ var WKWebView = React.createClass({
         onProgress={this._onProgress}
         onMessage={this._onMessage}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
+        onShouldCreateNewWindow={onShouldCreateNewWindow}
         pagingEnabled={this.props.pagingEnabled}
       />;
 

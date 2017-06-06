@@ -31,6 +31,7 @@
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingFinish;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingError;
 @property (nonatomic, copy) RCTDirectEventBlock onShouldStartLoadWithRequest;
+@property (nonatomic, copy) RCTDirectEventBlock onShouldCreateNewWindow;
 @property (nonatomic, copy) RCTDirectEventBlock onProgress;
 @property (nonatomic, copy) RCTDirectEventBlock onMessage;
 @property (assign) BOOL sendCookies;
@@ -406,7 +407,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 {
   NSString *scheme = navigationAction.request.URL.scheme;
   if ((navigationAction.targetFrame.isMainFrame || _openNewWindowInWebView) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"])) {
-    [webView loadRequest:navigationAction.request];
+    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+    [event addEntriesFromDictionary: @{
+                                       @"url": (navigationAction.request.URL).absoluteString,
+                                       @"navigationType": @(navigationAction.navigationType)
+                                       }];
+    if (![self.delegate webView:self shouldCreateNewWindow:event withCallback:_onShouldCreateNewWindow]) {
+      [webView loadRequest:navigationAction.request];
+    }
   } else {
     UIApplication *app = [UIApplication sharedApplication];
     NSURL *url = navigationAction.request.URL;

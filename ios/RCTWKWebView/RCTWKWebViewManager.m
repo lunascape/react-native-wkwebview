@@ -51,6 +51,7 @@ RCT_EXPORT_VIEW_PROPERTY(onLoadingStart, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onLoadingFinish, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onLoadingError, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onShouldStartLoadWithRequest, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onShouldCreateNewWindow, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onProgress, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onMessage, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(hideKeyboardAccessoryView, BOOL)
@@ -145,6 +146,27 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
     RCTLogWarn(@"Did not receive response to shouldStartLoad in time, defaulting to YES");
     return YES;
   }
+}
+
+- (BOOL)webView:(__unused RCTWKWebView *)webView
+shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
+   withCallback:(RCTDirectEventBlock)callback
+{
+    _shouldStartLoadLock = [[NSConditionLock alloc] initWithCondition:arc4random()];
+    _shouldStartLoad = YES;
+    request[@"lockIdentifier"] = @(_shouldStartLoadLock.condition);
+    callback(request);
+    
+    // Block the main thread for a maximum of 250ms until the JS thread returns
+    if ([_shouldStartLoadLock lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
+        BOOL returnValue = _shouldStartLoad;
+        [_shouldStartLoadLock unlock];
+        _shouldStartLoadLock = nil;
+        return returnValue;
+    } else {
+        RCTLogWarn(@"Did not receive response to shouldStartLoad in time, defaulting to YES");
+        return YES;
+    }
 }
 
 RCT_EXPORT_METHOD(startLoadWithResult:(BOOL)result lockIdentifier:(NSInteger)lockIdentifier)
