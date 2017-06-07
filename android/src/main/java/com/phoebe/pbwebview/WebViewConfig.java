@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-package com.facebook.react.views.webview;
+package com.phoebe.pbwebview;
 
 import android.webkit.WebView;
 

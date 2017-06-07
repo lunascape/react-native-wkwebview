@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-package com.facebook.react.views.webview;
+package com.phoebe.pbwebview;
 
 import javax.annotation.Nullable;
 
@@ -22,7 +22,9 @@ import android.graphics.Bitmap;
 import android.graphics.Picture;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Message;
 import android.text.TextUtils;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
@@ -32,6 +34,7 @@ import android.webkit.WebViewClient;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
+import android.widget.RelativeLayout;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.common.ReactConstants;
@@ -81,10 +84,10 @@ import org.json.JSONException;
  *  - canGoBack - boolean, whether there is anything on a history stack to go back
  *  - canGoForward - boolean, whether it is possible to request GO_FORWARD command
  */
-@ReactModule(name = ReactWebViewManager.REACT_CLASS)
-public class ReactWebViewManager extends SimpleViewManager<WebView> {
+@ReactModule(name = PBWebViewManager.REACT_CLASS)
+public class PBWebViewManager extends SimpleViewManager<WebView> {
 
-  protected static final String REACT_CLASS = "RCTWebView";
+  protected static final String REACT_CLASS = "PBWebView";
 
   private static final String HTML_ENCODING = "UTF-8";
   private static final String HTML_MIME_TYPE = "text/html; charset=utf-8";
@@ -313,14 +316,14 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
     }
   }
 
-  public ReactWebViewManager() {
+  public PBWebViewManager() {
     mWebViewConfig = new WebViewConfig() {
       public void configWebView(WebView webView) {
       }
     };
   }
 
-  public ReactWebViewManager(WebViewConfig webViewConfig) {
+  public PBWebViewManager(WebViewConfig webViewConfig) {
     mWebViewConfig = webViewConfig;
   }
 
@@ -347,9 +350,9 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
         callback.invoke(origin, true, false);
       }
       @Override
-      public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+      public boolean onCreateWindow(WebView webView, boolean isDialog, boolean isUserGesture, Message resultMsg) {
         webView.removeAllViews();
-        WebView newView = new WebView(context);
+        WebView newView = new WebView(webView.getContext());
         newView.setWebViewClient(new WebViewClient());
         // Create dynamically a new view
         newView.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -359,7 +362,7 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
         WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
         transport.setWebView(newView);
         resultMsg.sendToTarget();
-        return false;
+        return true;
       }
     });
     reactContext.addLifecycleEventListener(webView);
@@ -367,6 +370,8 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
     webView.getSettings().setBuiltInZoomControls(true);
     webView.getSettings().setDisplayZoomControls(false);
     webView.getSettings().setDomStorageEnabled(true);
+    webView.getSettings().setSupportMultipleWindows(true);
+    webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 
     // Fixes broken full-screen modals/galleries due to body height being 0.
     webView.setLayoutParams(
@@ -393,8 +398,6 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
   @ReactProp(name = "domStorageEnabled")
   public void setDomStorageEnabled(WebView view, boolean enabled) {
     view.getSettings().setDomStorageEnabled(enabled);
-    webView.getSettings().setSupportMultipleWindows(true);
-    webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
   }
 
   @ReactProp(name = "userAgent")
