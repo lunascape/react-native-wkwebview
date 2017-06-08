@@ -353,17 +353,31 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       }
       @Override
       public boolean onCreateWindow(WebView webView, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-        WritableMap event = Arguments.createMap();
-        event.putDouble("target", webView.getId());
-        event.putString("url", webView.getUrl());
-        event.putBoolean("loading", false);
-        event.putString("title", webView.getTitle());
-        event.putBoolean("canGoBack", webView.canGoBack());
-        event.putBoolean("canGoForward", webView.canGoForward());
-        dispatchEvent(webView,
-                new PBWebViewEvent(webView.getId(), event));
+        final WebView newView = new WebView(reactContext);
+        newView.setWebViewClient(new WebViewClient() {
+          @Override
+          public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            WritableMap event = Arguments.createMap();
+            event.putDouble("target", webView.getId());
+            event.putString("url", url);
+            event.putBoolean("loading", false);
+            event.putString("title", webView.getTitle());
+            event.putBoolean("canGoBack", webView.canGoBack());
+            event.putBoolean("canGoForward", webView.canGoForward());
+            dispatchEvent(webView,
+                    new PBWebViewEvent(webView.getId(), event));
+            newView.destroy();
+          }
+        });
+        // Create dynamically a new view
+        newView.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        return false;
+        webView.addView(newView);
+
+        WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+        transport.setWebView(newView);
+        resultMsg.sendToTarget();
+        return true;
       }
     });
     reactContext.addLifecycleEventListener(webView);
