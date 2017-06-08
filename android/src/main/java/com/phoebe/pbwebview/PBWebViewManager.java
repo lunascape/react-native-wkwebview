@@ -334,7 +334,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   }
 
   @Override
-  protected WebView createViewInstance(ThemedReactContext reactContext) {
+  protected WebView createViewInstance(final ThemedReactContext reactContext) {
     PBWebView webView = new PBWebView(reactContext);
 
     webView.setWebChromeClient(new WebChromeClient() {
