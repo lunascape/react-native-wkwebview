@@ -352,7 +352,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         callback.invoke(origin, true, false);
       }
       @Override
-      public boolean onCreateWindow(WebView webView, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+      public boolean onCreateWindow(final WebView webView, boolean isDialog, boolean isUserGesture, Message resultMsg) {
         final WebView newView = new WebView(reactContext);
         newView.setWebViewClient(new WebViewClient() {
           @Override
