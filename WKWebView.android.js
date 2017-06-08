@@ -171,6 +171,12 @@ class WebView extends React.Component {
      * executed immediately as JavaScript.
      */
     injectJavaScript: PropTypes.func,
+    /**
+     * Allows custom handling of window.open() by a JS handler. Return true
+     * or false from this method to use default behavior.
+     * @platform ios
+     */
+    onShouldCreateNewWindow: PropTypes.func,
 
     /**
      * Specifies the mixed content mode. i.e WebView will allow a secure origin to load content from any other origin.
@@ -260,6 +266,7 @@ class WebView extends React.Component {
         onLoadingStart={this.onLoadingStart}
         onLoadingFinish={this.onLoadingFinish}
         onLoadingError={this.onLoadingError}
+        onShouldCreateNewWindow={this.onShouldCreateNewWindow}
         testID={this.props.testID}
         mediaPlaybackRequiresUserAction={this.props.mediaPlaybackRequiresUserAction}
         allowUniversalAccessFromFileURLs={this.props.allowUniversalAccessFromFileURLs}
@@ -338,6 +345,12 @@ class WebView extends React.Component {
     }
   };
 
+  onShouldCreateNewWindow = (event) => {
+    if (this.props.onShouldCreateNewWindow) {
+      this.props.onShouldCreateNewWindow(event.nativeEvent);
+    }
+  };
+
   getWebViewHandle = () => {
     return ReactNative.findNodeHandle(this.refs[RCT_WEBVIEW_REF]);
   };
@@ -377,7 +390,7 @@ class WebView extends React.Component {
   }
 }
 
-var PBWebView = requireNativeComponent('PBWebView', PBWebView, {
+var PBWebView = requireNativeComponent('PBWebView', WebView, {
   nativeOnly: {
     messagingEnabled: PropTypes.bool,
   },
@@ -401,4 +414,4 @@ var styles = StyleSheet.create({
   },
 });
 
-module.exports = PBWebView;
+module.exports = WebView;

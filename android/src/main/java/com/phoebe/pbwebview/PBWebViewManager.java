@@ -59,6 +59,7 @@ import com.facebook.react.views.webview.events.TopLoadingErrorEvent;
 import com.facebook.react.views.webview.events.TopLoadingFinishEvent;
 import com.facebook.react.views.webview.events.TopLoadingStartEvent;
 import com.facebook.react.views.webview.events.TopMessageEvent;
+import com.phoebe.events.PBWebViewEvent;
 
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -335,6 +336,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   @Override
   protected WebView createViewInstance(ThemedReactContext reactContext) {
     PBWebView webView = new PBWebView(reactContext);
+
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
@@ -351,18 +353,17 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       }
       @Override
       public boolean onCreateWindow(WebView webView, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-        webView.removeAllViews();
-        WebView newView = new WebView(webView.getContext());
-        newView.setWebViewClient(new WebViewClient());
-        // Create dynamically a new view
-        newView.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        
-        webView.addView(newView);
+        WritableMap event = Arguments.createMap();
+        event.putDouble("target", webView.getId());
+        event.putString("url", webView.getUrl());
+        event.putBoolean("loading", false);
+        event.putString("title", webView.getTitle());
+        event.putBoolean("canGoBack", webView.canGoBack());
+        event.putBoolean("canGoForward", webView.canGoForward());
+        dispatchEvent(webView,
+                new PBWebViewEvent(webView.getId(), event));
 
-        WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
-        transport.setWebView(newView);
-        resultMsg.sendToTarget();
-        return true;
+        return false;
       }
     });
     reactContext.addLifecycleEventListener(webView);
@@ -597,5 +598,12 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     EventDispatcher eventDispatcher =
       reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
     eventDispatcher.dispatchEvent(event);
+  }
+
+  @Override
+  public @Nullable Map getExportedCustomDirectEventTypeConstants() {
+    return MapBuilder.of(
+            "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow")
+    );
   }
 }
