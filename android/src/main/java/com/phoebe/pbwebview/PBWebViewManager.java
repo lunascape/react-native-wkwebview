@@ -22,14 +22,18 @@ import android.graphics.Bitmap;
 import android.graphics.Picture;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.webkit.WebView.HitTestResult;
 import android.webkit.WebViewClient;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -396,6 +400,36 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     if (ReactBuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       WebView.setWebContentsDebuggingEnabled(true);
     }
+
+    webView.setOnLongClickListener(new View.OnLongClickListener() {
+      @Override
+      public boolean onLongClick(View view) {
+        final PBWebView webView = (PBWebView) view;
+        HitTestResult result = webView.getHitTestResult();
+        final String extra = result.getExtra();
+        final int type = result.getType();
+        if (type == HitTestResult.SRC_IMAGE_ANCHOR_TYPE || type == HitTestResult.SRC_ANCHOR_TYPE || type == HitTestResult.IMAGE_TYPE) {
+          Handler handler = new Handler(webView.getHandler().getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+              String url = (String) msg.getData().get("url");
+              String image_url = extra;
+              if (url == null) {
+                super.handleMessage(msg);
+              } else {
+                if (type == HitTestResult.SRC_ANCHOR_TYPE) {
+                  image_url = "";
+                }
+                webView.onMessage(String.format("{\"url\":\"%s\",\"image_url\":\"%s\"}", url, image_url));
+              }
+            }
+          };
+          Message msg = handler.obtainMessage();
+          webView.requestFocusNodeHref(msg);
+        }
+        return true;
+      }
+    });
 
     return webView;
   }
