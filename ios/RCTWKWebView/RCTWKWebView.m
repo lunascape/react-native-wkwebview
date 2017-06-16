@@ -91,12 +91,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     sender.enabled = NO;
     
     NSUInteger touchCount = [sender numberOfTouches];
-    for (NSUInteger t = 0; t < touchCount; t++) {
-      CGPoint point = [sender locationOfTouch:t inView:sender.view];
+    if (touchCount) {
+      CGPoint point = [sender locationOfTouch:0 inView:sender.view];
       if ([_webView respondsToSelector:@selector(respondToTapAndHoldAtLocation:)]) {
-        _onMessage([_webView respondToTapAndHoldAtLocation:point]);
+        NSDictionary* urlResult = [_webView respondToTapAndHoldAtLocation:point];
+        if (urlResult.allKeys.count == 0) {
+          longPress = NO;
+        }
+        _onMessage(urlResult);
       }
-      break;
     }
   } else if (sender.state == UIGestureRecognizerStateCancelled) {
     sender.enabled = YES;
@@ -519,9 +522,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (CGPoint)convertPointFromWindowToHtml:(CGPoint)pt
 {
-  // convert point from window to view coordinate system
-  pt = [self convertPoint:pt fromView:nil];
-  
   // convert point from view to HTML coordinate system
   
   CGPoint offset  = [self scrollOffset];
