@@ -341,6 +341,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     }
   }
   
+  if (!navigationAction.targetFrame) {
+    // Open a new tab
+    return decisionHandler(WKNavigationActionPolicyAllow);
+  }
+  
   if (_onLoadingStart) {
     // We have this check to filter out iframe requests and whatnot
     BOOL isTopFrame = [url isEqual:request.mainDocumentURL];
