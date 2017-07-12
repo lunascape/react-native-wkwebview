@@ -3,7 +3,7 @@ function sendToHost(channel, data) {
     'channel':channel,
     'data': data
   }
-  window.webkit.messageHandlers.observe.postMessage(message);
+  window.webkit.messageHandlers.reactNative.postMessage(message);
 };
 
 var _enableDefualtContextmenu = true;
