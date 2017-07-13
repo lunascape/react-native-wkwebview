@@ -130,29 +130,29 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   if (!hideKeyboardAccessoryView) {
     return;
   }
-
+  
   UIView* subview;
   for (UIView* view in _webView.scrollView.subviews) {
     if([[view.class description] hasPrefix:@"WKContent"])
       subview = view;
   }
-
+  
   if(subview == nil) return;
-
+  
   NSString* name = [NSString stringWithFormat:@"%@_SwizzleHelper", subview.class.superclass];
   Class newClass = NSClassFromString(name);
-
+  
   if(newClass == nil)
   {
     newClass = objc_allocateClassPair(subview.class, [name cStringUsingEncoding:NSASCIIStringEncoding], 0);
     if(!newClass) return;
-
+    
     Method method = class_getInstanceMethod([_SwizzleHelper class], @selector(inputAccessoryView));
-      class_addMethod(newClass, @selector(inputAccessoryView), method_getImplementation(method), method_getTypeEncoding(method));
-
+    class_addMethod(newClass, @selector(inputAccessoryView), method_getImplementation(method), method_getTypeEncoding(method));
+    
     objc_registerClassPair(newClass);
   }
-
+  
   object_setClass(subview, newClass);
 }
 
@@ -204,7 +204,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     if ([source[@"customUserAgent"] length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
       [_webView setCustomUserAgent:source[@"customUserAgent"]];
     }
-
+    
     // Allow loading local files:
     // <WKWebView source={{ file: RNFS.MainBundlePath + '/data/index.html', allowingReadAccessToURL: RNFS.MainBundlePath }} />
     // Only works for iOS 9+. So iOS 8 will simply ignore those two values
@@ -392,7 +392,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)webView:(WKWebView *)webView didFinishNavigation:(__unused WKNavigation *)navigation
 {
   NSString *jsFile = @"_webview";
-  NSString *jsFilePath = [[NSBundle mainBundle] pathForResource:jsFile ofType:@"js"];
+  NSString* bundlePath = [[NSBundle mainBundle] pathForResource:@"Scripts" ofType:@"bundle"];
+  NSBundle* bundle = [NSBundle bundleWithPath:bundlePath];
+  
+  NSString *jsFilePath = [bundle pathForResource:jsFile ofType:@"js"];
   NSURL *jsURL = [NSURL fileURLWithPath:jsFilePath];
   NSString *javascriptCode = [NSString stringWithContentsOfFile:jsURL.path encoding:NSUTF8StringEncoding error:nil];
   [_webView stringByEvaluatingJavaScriptFromString:javascriptCode];

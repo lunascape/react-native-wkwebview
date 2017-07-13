@@ -11,9 +11,19 @@
 		097457AE1D2A4595000D9368 /* RCTWKWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 097457AD1D2A4595000D9368 /* RCTWKWebView.m */; };
 		097457AF1D2AF4E0000D9368 /* RCTWKWebView.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 097457AC1D2A4595000D9368 /* RCTWKWebView.h */; };
 		097457B01D2AF4E0000D9368 /* RCTWKWebViewManager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 097457A81D2A457C000D9368 /* RCTWKWebViewManager.h */; };
-		0B21D4261F16EA9000826192 /* _webview.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0B21D4231F167AF100826192 /* _webview.js */; };
+		0B6D73F91F172BF600B4B751 /* _webview.js in Resources */ = {isa = PBXBuildFile; fileRef = 0B21D4231F167AF100826192 /* _webview.js */; };
 		3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0B6D73FA1F172BFE00B4B751 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 097457921D2A440A000D9368 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0B6D73F21F172BBF00B4B751;
+			remoteInfo = Scripts;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		097457981D2A440A000D9368 /* CopyFiles */ = {
@@ -22,7 +32,6 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				0B21D4261F16EA9000826192 /* _webview.js in CopyFiles */,
 				097457AF1D2AF4E0000D9368 /* RCTWKWebView.h in CopyFiles */,
 				097457B01D2AF4E0000D9368 /* RCTWKWebViewManager.h in CopyFiles */,
 			);
@@ -37,12 +46,21 @@
 		097457AC1D2A4595000D9368 /* RCTWKWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCTWKWebView.h; sourceTree = "<group>"; };
 		097457AD1D2A4595000D9368 /* RCTWKWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.objc; path = RCTWKWebView.m; sourceTree = "<group>"; tabWidth = 2; };
 		0B21D4231F167AF100826192 /* _webview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = _webview.js; sourceTree = "<group>"; wrapsLines = 1; };
+		0B6D73F31F172BBF00B4B751 /* Scripts.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scripts.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B6D73F51F172BBF00B4B751 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3E609CF41EAA815D00187C8C /* WeakScriptMessageDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeakScriptMessageDelegate.h; sourceTree = "<group>"; };
 		3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WeakScriptMessageDelegate.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		097457971D2A440A000D9368 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0B6D73F01F172BBF00B4B751 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -56,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				0974579C1D2A440A000D9368 /* RCTWKWebView */,
+				0B6D73F41F172BBF00B4B751 /* Scripts */,
 				0974579B1D2A440A000D9368 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				0974579A1D2A440A000D9368 /* libRCTWKWebView.a */,
+				0B6D73F31F172BBF00B4B751 /* Scripts.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,6 +102,14 @@
 			path = RCTWKWebView;
 			sourceTree = "<group>";
 		};
+		0B6D73F41F172BBF00B4B751 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				0B6D73F51F172BBF00B4B751 /* Info.plist */,
+			);
+			path = Scripts;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -96,11 +124,29 @@
 			buildRules = (
 			);
 			dependencies = (
+				0B6D73FB1F172BFE00B4B751 /* PBXTargetDependency */,
 			);
 			name = RCTWKWebView;
 			productName = RCTWKWebView;
 			productReference = 0974579A1D2A440A000D9368 /* libRCTWKWebView.a */;
 			productType = "com.apple.product-type.library.static";
+		};
+		0B6D73F21F172BBF00B4B751 /* Scripts */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0B6D73F81F172BBF00B4B751 /* Build configuration list for PBXNativeTarget "Scripts" */;
+			buildPhases = (
+				0B6D73EF1F172BBF00B4B751 /* Sources */,
+				0B6D73F01F172BBF00B4B751 /* Frameworks */,
+				0B6D73F11F172BBF00B4B751 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Scripts;
+			productName = Scripts;
+			productReference = 0B6D73F31F172BBF00B4B751 /* Scripts.bundle */;
+			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
 
@@ -112,6 +158,10 @@
 				TargetAttributes = {
 					097457991D2A440A000D9368 = {
 						CreatedOnToolsVersion = 7.3.1;
+					};
+					0B6D73F21F172BBF00B4B751 = {
+						CreatedOnToolsVersion = 8.3.3;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -128,9 +178,21 @@
 			projectRoot = "";
 			targets = (
 				097457991D2A440A000D9368 /* RCTWKWebView */,
+				0B6D73F21F172BBF00B4B751 /* Scripts */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0B6D73F11F172BBF00B4B751 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B6D73F91F172BF600B4B751 /* _webview.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		097457961D2A440A000D9368 /* Sources */ = {
@@ -143,7 +205,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0B6D73EF1F172BBF00B4B751 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0B6D73FB1F172BFE00B4B751 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0B6D73F21F172BBF00B4B751 /* Scripts */;
+			targetProxy = 0B6D73FA1F172BFE00B4B751 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		097457A11D2A440A000D9368 /* Debug */ = {
@@ -258,6 +335,48 @@
 			};
 			name = Release;
 		};
+		0B6D73F61F172BBF00B4B751 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Scripts/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_BUNDLE_IDENTIFIER = com.binhnd.Scripts;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		0B6D73F71F172BBF00B4B751 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Scripts/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_BUNDLE_IDENTIFIER = com.binhnd.Scripts;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -278,6 +397,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		0B6D73F81F172BBF00B4B751 /* Build configuration list for PBXNativeTarget "Scripts" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0B6D73F61F172BBF00B4B751 /* Debug */,
+				0B6D73F71F172BBF00B4B751 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
