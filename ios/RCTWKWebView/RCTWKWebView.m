@@ -99,7 +99,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
         if (urlResult.allKeys.count == 0) {
           longPress = NO;
         }
-        _onMessage(urlResult);
+        _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"contextMenu", @"data":urlResult}});
       }
     }
   } else if (sender.state == UIGestureRecognizerStateCancelled) {
@@ -400,7 +400,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSString *javascriptCode = [NSString stringWithContentsOfFile:jsURL.path encoding:NSUTF8StringEncoding error:nil];
   [_webView stringByEvaluatingJavaScriptFromString:javascriptCode];
   NSString* loginFormExist = [_webView stringByEvaluatingJavaScriptFromString:@"__preload.findLoginForm()"];
-  if (loginFormExist) {
+  if ([loginFormExist boolValue]) {
     [_webView stringByEvaluatingJavaScriptFromString:@"__preload.observeSubmit()"];
   }
   if (_injectedJavaScript != nil) {

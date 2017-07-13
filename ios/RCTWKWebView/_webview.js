@@ -1,6 +1,6 @@
 function sendToHost(channel, data) {
   let message = {
-    'channel':channel,
+    'type':channel,
     'data': data
   }
   window.webkit.messageHandlers.reactNative.postMessage(message);
