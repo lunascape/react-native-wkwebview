@@ -48,7 +48,7 @@ __preload = {
         _loginInputs.push({'form':form, 'account': accountField, 'password':passFields[0]});
       }
     }
-    return(_loginInputs.length > 0);
+    sendToHost('loginForm', {'exist':_loginInputs.length > 0});
   },
   fillPassForm: function(account, password) {
     for(let i = 0; i < _loginInputs.length; i++) {

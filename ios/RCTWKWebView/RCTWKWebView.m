@@ -399,10 +399,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSURL *jsURL = [NSURL fileURLWithPath:jsFilePath];
   NSString *javascriptCode = [NSString stringWithContentsOfFile:jsURL.path encoding:NSUTF8StringEncoding error:nil];
   [_webView stringByEvaluatingJavaScriptFromString:javascriptCode];
-  NSString* loginFormExist = [_webView stringByEvaluatingJavaScriptFromString:@"__preload.findLoginForm()"];
-  if ([loginFormExist boolValue]) {
-    [_webView stringByEvaluatingJavaScriptFromString:@"__preload.observeSubmit()"];
-  }
   if (_injectedJavaScript != nil) {
     [webView evaluateJavaScript:_injectedJavaScript completionHandler:^(id result, NSError *error) {
       NSMutableDictionary<NSString *, id> *event = [self baseEvent];
