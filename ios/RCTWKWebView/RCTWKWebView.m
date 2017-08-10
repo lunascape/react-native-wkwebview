@@ -31,7 +31,7 @@
 
 @end
 
-@interface RCTWKWebView () <WKNavigationDelegate, RCTAutoInsetsProtocol, WKScriptMessageHandler, WKUIDelegate, UIGestureRecognizerDelegate, WKScriptMessageHandler>
+@interface RCTWKWebView () <WKNavigationDelegate, RCTAutoInsetsProtocol, WKScriptMessageHandler, WKUIDelegate, UIGestureRecognizerDelegate, WKScriptMessageHandler, UIScrollViewDelegate>
 
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingStart;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingFinish;
@@ -75,6 +75,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     
     _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:config];
     _webView.UIDelegate = self;
+    _webView.scrollView.delegate = self;
     _webView.navigationDelegate = self;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
     [self addSubview:_webView];
@@ -412,6 +413,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
   
   [webView evaluateJavaScript:@"document.body.style.webkitTouchCallout='none';" completionHandler:nil];
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+    CGPoint offset = scrollView.contentOffset;
+    [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
+    _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
 
 #pragma mark - WKUIDelegate
