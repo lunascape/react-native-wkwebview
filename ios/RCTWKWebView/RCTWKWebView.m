@@ -419,6 +419,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
     CGPoint offset = scrollView.contentOffset;
     [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
+    [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
     _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
 
