@@ -14,6 +14,8 @@
 
 #import <objc/runtime.h>
 
+#define LocalizeString(key) (NSLocalizedStringFromTableInBundle(key, @"Localizable", resourceBundle, nil))
+
 // runtime trick to remove WKWebView keyboard default toolbar
 // see: http://stackoverflow.com/questions/19033292/ios-7-uiwebview-keyboard-issue/19042279#19042279
 @interface _SwizzleHelper : NSObject @end
@@ -49,6 +51,7 @@
   WKWebView *_webView;
   NSString *_injectedJavaScript;
   BOOL longPress;
+  NSBundle* resourceBundle;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -63,6 +66,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   if(self = [self initWithFrame:CGRectZero])
   {
     super.backgroundColor = [UIColor clearColor];
+    
+    NSString* bundlePath = [[NSBundle mainBundle] pathForResource:@"Scripts" ofType:@"bundle"];
+    resourceBundle = [NSBundle bundleWithPath:bundlePath];
     
     _automaticallyAdjustContentInsets = YES;
     _contentInset = UIEdgeInsetsZero;
@@ -281,6 +287,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
                                                                                                  @"title": _webView.title,
                                                                                                  @"canGoBack": @(_webView.canGoBack),
                                                                                                  @"canGoForward" : @(_webView.canGoForward),
+                                                                                                 @"progress" : @(_webView.estimatedProgress),
                                                                                                  }];
   
   return event;
@@ -393,10 +400,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)webView:(WKWebView *)webView didFinishNavigation:(__unused WKNavigation *)navigation
 {
   NSString *jsFile = @"_webview";
-  NSString* bundlePath = [[NSBundle mainBundle] pathForResource:@"Scripts" ofType:@"bundle"];
-  NSBundle* bundle = [NSBundle bundleWithPath:bundlePath];
   
-  NSString *jsFilePath = [bundle pathForResource:jsFile ofType:@"js"];
+  NSString *jsFilePath = [resourceBundle pathForResource:jsFile ofType:@"js"];
   NSURL *jsURL = [NSURL fileURLWithPath:jsFilePath];
   NSString *javascriptCode = [NSString stringWithContentsOfFile:jsURL.path encoding:NSUTF8StringEncoding error:nil];
   [_webView stringByEvaluatingJavaScriptFromString:javascriptCode];
@@ -415,12 +420,55 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   [webView evaluateJavaScript:@"document.body.style.webkitTouchCallout='none';" completionHandler:nil];
 }
 
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
+  decisionHandler(WKNavigationResponsePolicyAllow);
+}
+
+- (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
+  NSString* authMethod = challenge.protectionSpace.authenticationMethod;
+  if ([authMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
+    @try {
+      [challenge.sender continueWithoutCredentialForAuthenticationChallenge:challenge];
+    } @catch (NSException *exception) {
+      NSLog(@"%@", exception.description);
+    } @finally {
+      completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+    }
+  } else if ([authMethod isEqualToString:NSURLAuthenticationMethodHTTPBasic]) {
+    UIAlertController* alertView = [UIAlertController alertControllerWithTitle:@"Login required" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+    [alertView addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+      textField.placeholder = LocalizeString(@"Username");
+    }];
+    [alertView addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+      textField.placeholder = LocalizeString(@"Password");
+      textField.secureTextEntry = YES;
+    }];
+    [alertView addAction:[UIAlertAction actionWithTitle:LocalizeString(@"Cancel") style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+      completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+    }]];
+    
+    [alertView addAction:[UIAlertAction actionWithTitle:LocalizeString(@"Login") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+      UITextField *userField = alertView.textFields.firstObject;
+      UITextField *passField = alertView.textFields.lastObject;
+      NSURLCredential* credential = [NSURLCredential credentialWithUser:userField.text password:passField.text persistence:NSURLCredentialPersistenceForSession];
+      @try {
+        [challenge.sender useCredential:credential forAuthenticationChallenge:challenge];
+      } @catch (NSException *exception) {
+        NSLog(@"%@", exception.description);
+      } @finally {
+        completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+      }
+    }]];
+    [[[UIApplication sharedApplication].delegate window].rootViewController presentViewController:alertView animated:YES completion:nil];
+  }
+}
+
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
-    CGPoint offset = scrollView.contentOffset;
-    [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
-    [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
-    _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
+  NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+  CGPoint offset = scrollView.contentOffset;
+  [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
+  [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
+  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
 
 #pragma mark - WKUIDelegate

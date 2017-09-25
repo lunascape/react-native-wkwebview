@@ -1,0 +1,11 @@
+/* 
+  Localizable.strings
+  RCTWKWebView
+
+  Created by binh nguyen on 9/25/17.
+
+*/
+"Username" = "Username";
+"Password" = "Password";
+"Cancel" = "Cancel";
+"Login" = "Login";

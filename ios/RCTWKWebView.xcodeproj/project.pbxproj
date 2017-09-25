@@ -11,6 +11,7 @@
 		097457AE1D2A4595000D9368 /* RCTWKWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 097457AD1D2A4595000D9368 /* RCTWKWebView.m */; };
 		097457AF1D2AF4E0000D9368 /* RCTWKWebView.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 097457AC1D2A4595000D9368 /* RCTWKWebView.h */; };
 		097457B01D2AF4E0000D9368 /* RCTWKWebViewManager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 097457A81D2A457C000D9368 /* RCTWKWebViewManager.h */; };
+		0B44ACF51F78C0F0000F4C9B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B44ACF71F78C0F0000F4C9B /* Localizable.strings */; };
 		0B6D73F91F172BF600B4B751 /* _webview.js in Resources */ = {isa = PBXBuildFile; fileRef = 0B21D4231F167AF100826192 /* _webview.js */; };
 		3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */; };
 /* End PBXBuildFile section */
@@ -46,6 +47,8 @@
 		097457AC1D2A4595000D9368 /* RCTWKWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCTWKWebView.h; sourceTree = "<group>"; };
 		097457AD1D2A4595000D9368 /* RCTWKWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.objc; path = RCTWKWebView.m; sourceTree = "<group>"; tabWidth = 2; };
 		0B21D4231F167AF100826192 /* _webview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = _webview.js; sourceTree = "<group>"; wrapsLines = 1; };
+		0B44ACF61F78C0F0000F4C9B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		0B44ACF81F78C0FA000F4C9B /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0B6D73F31F172BBF00B4B751 /* Scripts.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scripts.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B6D73F51F172BBF00B4B751 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3E609CF41EAA815D00187C8C /* WeakScriptMessageDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeakScriptMessageDelegate.h; sourceTree = "<group>"; };
@@ -98,6 +101,7 @@
 				097457A91D2A457C000D9368 /* RCTWKWebViewManager.m */,
 				3E609CF41EAA815D00187C8C /* WeakScriptMessageDelegate.h */,
 				3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */,
+				0B44ACF71F78C0F0000F4C9B /* Localizable.strings */,
 			);
 			path = RCTWKWebView;
 			sourceTree = "<group>";
@@ -171,6 +175,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ja,
 			);
 			mainGroup = 097457911D2A440A000D9368;
 			productRefGroup = 0974579B1D2A440A000D9368 /* Products */;
@@ -189,6 +194,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B6D73F91F172BF600B4B751 /* _webview.js in Resources */,
+				0B44ACF51F78C0F0000F4C9B /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,11 +228,24 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		0B44ACF71F78C0F0000F4C9B /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0B44ACF61F78C0F0000F4C9B /* en */,
+				0B44ACF81F78C0FA000F4C9B /* ja */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		097457A11D2A440A000D9368 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -270,6 +289,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -405,6 +425,7 @@
 				0B6D73F71F172BBF00B4B751 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
