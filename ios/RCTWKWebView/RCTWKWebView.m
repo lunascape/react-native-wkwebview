@@ -435,7 +435,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
     }
   } else if ([authMethod isEqualToString:NSURLAuthenticationMethodHTTPBasic]) {
-    UIAlertController* alertView = [UIAlertController alertControllerWithTitle:@"Login required" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController* alertView = [UIAlertController alertControllerWithTitle:[LocalizeString(@"Login_title") stringByReplacingOccurrencesOfString:@"%s" withString:challenge.protectionSpace.host] message:@"" preferredStyle:UIAlertControllerStyleAlert];
     [alertView addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
       textField.placeholder = LocalizeString(@"Username");
     }];

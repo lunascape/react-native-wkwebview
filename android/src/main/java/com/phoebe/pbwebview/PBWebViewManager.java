@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -26,11 +27,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
+import android.webkit.HttpAuthHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebView.HitTestResult;
@@ -38,7 +41,10 @@ import android.webkit.WebViewClient;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.common.ReactConstants;
@@ -211,6 +217,37 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       event.putBoolean("canGoBack", webView.canGoBack());
       event.putBoolean("canGoForward", webView.canGoForward());
       return event;
+    }
+
+    @Override
+    public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler, String host, String realm) {
+      AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+      LayoutInflater inflater = LayoutInflater.from(view.getContext());
+      builder.setView(inflater.inflate(R.layout.authenticate, null));
+
+      final AlertDialog alertDialog = builder.create();
+      alertDialog.getWindow().setLayout(600, 400);
+      alertDialog.show();
+      TextView titleTv = (TextView) alertDialog.findViewById(R.id.tv_login);
+      titleTv.setText(view.getResources().getString(R.string.login_title).replace("%s", host));
+      Button btnLogin = (Button) alertDialog.findViewById(R.id.btn_login);
+      Button btnCancel = (Button) alertDialog.findViewById(R.id.btn_cancel);
+      final EditText userField = (EditText) alertDialog.findViewById(R.id.edt_username);
+      final EditText passField = (EditText) alertDialog.findViewById(R.id.edt_password);
+      btnCancel.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          alertDialog.dismiss();
+          handler.cancel();
+        }
+      });
+      btnLogin.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          alertDialog.dismiss();
+          handler.proceed(userField.getText().toString(), passField.getText().toString());
+        }
+      });
     }
   }
 

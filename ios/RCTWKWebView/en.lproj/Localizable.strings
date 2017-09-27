@@ -9,3 +9,4 @@
 "Password" = "Password";
 "Cancel" = "Cancel";
 "Login" = "Login";
+"Login_title" = "Login to %s";
