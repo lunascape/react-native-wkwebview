@@ -52,6 +52,7 @@
   NSString *_injectedJavaScript;
   BOOL longPress;
   NSBundle* resourceBundle;
+  CGPoint lastOffset;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -83,6 +84,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _webView.UIDelegate = self;
     _webView.scrollView.delegate = self;
     _webView.navigationDelegate = self;
+    lastOffset = _webView.scrollView.contentOffset;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
     [self addSubview:_webView];
     
@@ -130,6 +132,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
   
   [_webView loadRequest:request];
+}
+
+- (void)setResetScroll:(BOOL)resetScroll {
+  _resetScroll = resetScroll;
 }
 
 -(void)setHideKeyboardAccessoryView:(BOOL)hideKeyboardAccessoryView
@@ -467,8 +473,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   CGPoint offset = scrollView.contentOffset;
   [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
+  [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(offset.x - lastOffset.x),@"dy": @(offset.y - lastOffset.y)}}];
   [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
+  if (!self.resetScroll) {
+    lastOffset = offset;
+  } else {
+    [scrollView setContentOffset:lastOffset animated:NO];
+  }
 }
 
 #pragma mark - WKUIDelegate

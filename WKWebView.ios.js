@@ -218,6 +218,10 @@ var WKWebView = React.createClass({
      * A Boolean value that determines whether paging is enabled for the scroll view.
     */
     pagingEnabled: PropTypes.bool,
+    /**
+     * A Boolean value that determines whether scrollview content should reset its last offset.
+    */
+    resetScroll: PropTypes.bool
   },
   getInitialState() {
     return {
@@ -309,6 +313,7 @@ var WKWebView = React.createClass({
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         onShouldCreateNewWindow={onShouldCreateNewWindow}
         pagingEnabled={this.props.pagingEnabled}
+        resetScroll={this.props.resetScroll}
       />;
 
     return (
