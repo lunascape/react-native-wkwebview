@@ -171,6 +171,7 @@ var WKWebView = React.createClass({
      */
     bounces: PropTypes.bool,
     scrollEnabled: PropTypes.bool,
+    scrollToTop: PropTypes.bool,
     allowsBackForwardNavigationGestures: PropTypes.bool,
     automaticallyAdjustContentInsets: PropTypes.bool,
     contentInset: EdgeInsetsPropType,
@@ -279,7 +280,7 @@ var WKWebView = React.createClass({
     });
 
     if (this.props.source && typeof this.props.source == 'object') {
-      var source = Object.assign({}, this.props.source, { 
+      var source = Object.assign({}, this.props.source, {
         sendCookies: this.props.sendCookies,
         customUserAgent: this.props.customUserAgent || this.props.userAgent
       });
@@ -314,6 +315,7 @@ var WKWebView = React.createClass({
         onShouldCreateNewWindow={onShouldCreateNewWindow}
         pagingEnabled={this.props.pagingEnabled}
         resetScroll={this.props.resetScroll}
+        scrollToTop={this.props.scrollToTop}
       />;
 
     return (

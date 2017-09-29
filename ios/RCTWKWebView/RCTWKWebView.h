@@ -36,6 +36,7 @@ shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
 @property (nonatomic, copy) NSString *injectedJavaScript;
 @property (nonatomic, assign) BOOL hideKeyboardAccessoryView;
 @property (nonatomic, assign) BOOL resetScroll;
+@property (nonatomic, assign) BOOL scrollToTop;
 
 
 - (void)goForward;

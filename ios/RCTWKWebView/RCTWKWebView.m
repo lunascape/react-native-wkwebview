@@ -138,6 +138,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   _resetScroll = resetScroll;
 }
 
+- (void)setScrollToTop:(BOOL)scrollToTop {
+  _webView.scrollView.scrollsToTop = scrollToTop;
+}
+
 -(void)setHideKeyboardAccessoryView:(BOOL)hideKeyboardAccessoryView
 {
   if (!hideKeyboardAccessoryView) {
