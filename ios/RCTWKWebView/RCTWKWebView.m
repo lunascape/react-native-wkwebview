@@ -134,8 +134,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   [_webView loadRequest:request];
 }
 
-- (void)setResetScroll:(BOOL)resetScroll {
-  _resetScroll = resetScroll;
+- (void)setLockScroll:(LockScroll)lockScroll {
+  _lockScroll = lockScroll;
 }
 
 - (void)setScrollToTop:(BOOL)scrollToTop {
@@ -474,17 +474,27 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-  NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   CGPoint offset = scrollView.contentOffset;
+  CGFloat dy = offset.y - lastOffset.y;
+  CGFloat offsetMin = 0;
+  CGFloat offsetMax = scrollView.contentSize.height - scrollView.frame.size.height;
+  
+  BOOL shoudLockUp = dy < 0 && offset.y < offsetMax && lastOffset.y < offsetMax;
+  BOOL shoudLockDw = dy >= 0 && offset.y >= offsetMin && lastOffset.y >= offsetMin;
+  
+  NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
-  [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(offset.x - lastOffset.x),@"dy": @(offset.y - lastOffset.y)}}];
   [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
-  if (!self.resetScroll) {
+  if ((_lockScroll == NoLock) ||
+      (_lockScroll == LockDirectionUp && !shoudLockUp) ||
+      (_lockScroll == LockDirectionDown && !shoudLockDw) ||
+      (_lockScroll == LockDirectionBoth && !shoudLockUp && !shoudLockDw)) {
     lastOffset = offset;
   } else {
+    [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(offset.x - lastOffset.x),@"dy": @(dy)}}];
     [scrollView setContentOffset:lastOffset animated:NO];
   }
+  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
 
 #pragma mark - WKUIDelegate

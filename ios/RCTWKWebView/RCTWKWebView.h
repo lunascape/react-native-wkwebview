@@ -23,6 +23,13 @@ shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
 
 @end
 
+typedef enum {
+    NoLock = 0,
+    LockDirectionUp,
+    LockDirectionDown,
+    LockDirectionBoth
+} LockScroll;
+
 @interface RCTWKWebView : RCTView
 
 - (instancetype)initWithProcessPool:(WKProcessPool *)processPool;
@@ -35,9 +42,8 @@ shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
 @property (nonatomic, assign) BOOL openNewWindowInWebView;
 @property (nonatomic, copy) NSString *injectedJavaScript;
 @property (nonatomic, assign) BOOL hideKeyboardAccessoryView;
-@property (nonatomic, assign) BOOL resetScroll;
+@property (nonatomic, assign) LockScroll lockScroll;
 @property (nonatomic, assign) BOOL scrollToTop;
-
 
 - (void)goForward;
 - (void)goBack;
