@@ -1,8 +1,6 @@
 'use strict';
 
-import React, {
-  PropTypes
-} from 'react';
+import React from 'react';
 import ReactNative, {
   requireNativeComponent,
   EdgeInsetsPropType,
@@ -17,6 +15,8 @@ import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource'
 import deprecatedPropType from 'react-native/Libraries/Utilities/deprecatedPropType';
 import invariant from 'fbjs/lib/invariant';
 import keyMirror from 'fbjs/lib/keyMirror';
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
 var WKWebViewManager = NativeModules.WKWebViewManager;
 
 var BGWASH = 'rgba(255,255,255,0.8)';
@@ -73,7 +73,7 @@ var defaultRenderError = (errorDomain, errorCode, errorDesc) => (
  * Renders a native WebView.
  */
 
-var WKWebView = React.createClass({
+var WKWebView = createReactClass({
   statics: {
     JSNavigationScheme: JSNavigationScheme,
     NavigationType: NavigationType,
