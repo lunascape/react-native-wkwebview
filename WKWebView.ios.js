@@ -370,6 +370,10 @@ var WKWebView = createReactClass({
     )
   },
 
+  findInPage: function(searchString) {
+    return WKWebViewManager.findInPage(this.getWebViewHandle(), searchString);
+  },
+
   evaluateJavaScript: function(js) {
     return WKWebViewManager.evaluateJavaScript(this.getWebViewHandle(), js);
   },

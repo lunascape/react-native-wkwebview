@@ -127,6 +127,20 @@ RCT_EXPORT_METHOD(evaluateJavaScript:(nonnull NSNumber *)reactTag
   }];
 }
 
+RCT_EXPORT_METHOD(findInPage:(nonnull NSNumber *)reactTag searchString:(NSString *)searchString)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
+        RCTWKWebView *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[RCTWKWebView class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
+        } else {
+            NSLog(@"Search webview with string: %@", searchString);
+            [view findInPage:searchString];
+        }
+    }];
+}
+
+
 #pragma mark - Exported synchronous methods
 
 - (BOOL)webView:(__unused RCTWKWebView *)webView

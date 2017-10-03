@@ -49,6 +49,7 @@ typedef enum {
 - (void)goBack;
 - (void)reload;
 - (void)stopLoading;
+- (void)findInPage:(NSString *)searchString;
 - (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *error))completionHandler;
 
 @end
