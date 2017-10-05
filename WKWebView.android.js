@@ -23,9 +23,9 @@ import ReactNative, {
 } from 'react-native';
 
 import React, {
-  PropTypes
 } from 'react';
 
+import PropTypes from 'prop-types';
 var keyMirror = require('fbjs/lib/keyMirror');
 import deprecatedPropType from 'react-native/Libraries/Utilities/deprecatedPropType';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
