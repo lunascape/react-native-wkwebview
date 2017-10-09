@@ -81,7 +81,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _webView.UIDelegate = self;
     _webView.scrollView.delegate = self;
     _webView.navigationDelegate = self;
-    _webView.scrollView.decelerationRate = UIScrollViewDecelerationRateFast;
+    _webView.scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
     lastOffset = _webView.scrollView.contentOffset;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
     [self addSubview:_webView];
@@ -490,39 +490,43 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
   CGPoint offset = scrollView.contentOffset;
   CGFloat dy = offset.y - lastOffset.y;
-  if (offset.y < 0) dy = 0;
-//  CGFloat offsetMin = 0;
-//  CGFloat offsetMax = scrollView.contentSize.height - scrollView.frame.size.height;
-//  
-//  BOOL shoudLockUp = dy < 0 && offset.y < offsetMax && lastOffset.y < offsetMax;
-//  BOOL shoudLockDw = dy >= 0 && offset.y >= offsetMin && lastOffset.y >= offsetMin;
+  CGSize frameSize = scrollView.frame.size;
+  
+  CGFloat offsetMin = 0;
+  CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
+
+  BOOL shoudLockUp = dy < 0 && ((decelerating && offset.y < offsetMax) || offset.y <= 0);
+  BOOL shoudLockDw = dy >= 0 && offset.y >= offsetMin && lastOffset.y >= offsetMin;
   
   NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
+  [event addEntriesFromDictionary:@{@"scroll": @{@"decelerating":@(decelerating), @"width": @(frameSize.width), @"height": @(frameSize.height)}}];
   [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
-//  if ((_lockScroll == NoLock) ||
-//      (_lockScroll == LockDirectionUp && !shoudLockUp) ||
-//      (_lockScroll == LockDirectionDown && !shoudLockDw) ||
-//      (_lockScroll == LockDirectionBoth && !shoudLockUp && !shoudLockDw)) {
-//    lastOffset = offset;
-//  } else {
-//    [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(offset.x - lastOffset.x),@"dy": @(dy)}}];
-//    [scrollView setContentOffset:lastOffset animated:NO];
-//  }
+  if ((_lockScroll == NoLock) ||
+      (_lockScroll == LockDirectionUp && !shoudLockUp) ||
+      (_lockScroll == LockDirectionDown && !shoudLockDw) ||
+      (_lockScroll == LockDirectionBoth && !shoudLockUp && !shoudLockDw)) {
+    lastOffset = offset;
+    dy = 0;
+  } else {
+    if (decelerating && shoudLockUp) {
+      lastOffset = offset;
+    } else
+    [scrollView setContentOffset:lastOffset animated:NO];
+  }
   [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(offset.x - lastOffset.x),@"dy": @(dy)}}];
-  lastOffset = offset;
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-  
-}
-
-- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
-  decelerating = YES;
+  decelerating = decelerate;
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+  decelerating = NO;
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
   decelerating = NO;
 }
 
