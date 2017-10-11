@@ -494,26 +494,24 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   
   CGFloat offsetMin = 0;
   CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
-
-  BOOL shoudLockUp = dy < 0 && ((decelerating && offset.y < offsetMax) || offset.y <= 0);
-  BOOL shoudLockDw = dy >= 0 && offset.y >= offsetMin && lastOffset.y >= offsetMin;
+  
+  BOOL shouldLock = lastOffset.y == offsetMin && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp) || (dy > 0 && _lockScroll == LockDirectionDown));
   
   NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
   [event addEntriesFromDictionary:@{@"scroll": @{@"decelerating":@(decelerating), @"width": @(frameSize.width), @"height": @(frameSize.height)}}];
   [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
-  if ((_lockScroll == NoLock) ||
-      (_lockScroll == LockDirectionUp && !shoudLockUp) ||
-      (_lockScroll == LockDirectionDown && !shoudLockDw) ||
-      (_lockScroll == LockDirectionBoth && !shoudLockUp && !shoudLockDw)) {
-    lastOffset = offset;
-    dy = 0;
-  } else {
-    if (decelerating && shoudLockUp) {
-      lastOffset = offset;
-    } else
+  
+  if (shouldLock && !decelerating) {
     [scrollView setContentOffset:lastOffset animated:NO];
+  } else {
+    lastOffset = offset;
+    if ((!decelerating && ((dy < 0 && _lockScroll == LockDirectionUp && offset.y >= offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && offset.y <= offsetMin))) ||
+        (decelerating && (offset.y <= offsetMin || offset.y >= offsetMax))) {
+      dy = 0;
+    }
   }
+  
   [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(offset.x - lastOffset.x),@"dy": @(dy)}}];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
