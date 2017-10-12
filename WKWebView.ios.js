@@ -222,7 +222,8 @@ var WKWebView = createReactClass({
     /**
      * A Boolean value that determines whether scrollview content should reset its last offset.
     */
-    lockScroll: PropTypes.number
+    lockScroll: PropTypes.number,
+    adjustOffset: PropTypes.object
   },
   getInitialState() {
     return {
@@ -236,6 +237,10 @@ var WKWebView = createReactClass({
     if (this.props.startInLoadingState) {
       this.setState({viewState: WebViewState.LOADING});
     }
+  },
+
+  setNativeProps(nativeProps) {
+    this.refs[RCT_WEBVIEW_REF].setNativeProps(nativeProps);
   },
 
   render() {

@@ -44,6 +44,7 @@ typedef enum {
 @property (nonatomic, assign) BOOL hideKeyboardAccessoryView;
 @property (nonatomic, assign) LockScroll lockScroll;
 @property (nonatomic, assign) BOOL scrollToTop;
+@property (nonatomic, assign) CGPoint adjustOffset;
 
 - (void)goForward;
 - (void)goBack;

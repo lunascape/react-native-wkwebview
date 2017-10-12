@@ -57,6 +57,7 @@ RCT_EXPORT_VIEW_PROPERTY(onMessage, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(hideKeyboardAccessoryView, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(lockScroll, NSInteger)
 RCT_EXPORT_VIEW_PROPERTY(scrollToTop, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(adjustOffset, CGPoint)
 
 RCT_EXPORT_METHOD(goBack:(nonnull NSNumber *)reactTag)
 {
