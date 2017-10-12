@@ -495,14 +495,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   CGFloat offsetMin = 0;
   CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
   
-  BOOL shouldLock = lastOffset.y == offsetMin && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp) || (dy > 0 && _lockScroll == LockDirectionDown));
+  BOOL shouldLock = !decelerating && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp && lastOffset.y == offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && lastOffset.y >= offsetMin));
   
   NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(offset.x),@"y": @(offset.y)}}];
   [event addEntriesFromDictionary:@{@"scroll": @{@"decelerating":@(decelerating), @"width": @(frameSize.width), @"height": @(frameSize.height)}}];
   [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
   
-  if (shouldLock && !decelerating) {
+  if (shouldLock) {
     [scrollView setContentOffset:lastOffset animated:NO];
   } else {
     lastOffset = offset;
