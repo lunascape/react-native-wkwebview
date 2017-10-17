@@ -303,6 +303,34 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
                       updateOffset:NO];
 }
 
+- (void)captureScreen
+{
+  CGRect tempFrame = _webView.frame;
+  CGRect screenFrame = _webView.frame;
+  
+  UIGraphicsBeginImageContextWithOptions(screenFrame.size, NO, 0.0);
+  
+  CGContextRef context = UIGraphicsGetCurrentContext();
+  [[UIColor blackColor] set];
+  CGContextFillRect(context, screenFrame);
+  
+  [_webView.layer renderInContext:context];
+  
+  UIImage *screenImage = UIGraphicsGetImageFromCurrentImageContext();
+  
+  UIGraphicsEndImageContext();
+  
+  _webView.frame = tempFrame;
+  
+  NSDate *date = [NSDate new];
+  NSString *fileName = [NSString stringWithFormat:@"%f.png",date.timeIntervalSince1970];
+  NSString * path = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
+  NSData * binaryImageData = UIImagePNGRepresentation(screenImage);
+  [binaryImageData writeToFile:path atomically:YES];
+  
+  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"captureScreen", @"data":path}});
+}
+
 - (void)setBackgroundColor:(UIColor *)backgroundColor
 {
   CGFloat alpha = CGColorGetAlpha(backgroundColor.CGColor);

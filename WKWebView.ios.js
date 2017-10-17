@@ -365,6 +365,17 @@ var WKWebView = createReactClass({
   },
 
   /**
+   * Capture Screen the current page.
+   */
+  captureScreen: function() {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.RCTWKWebView.Commands.captureScreen,
+      null
+    );
+  },
+
+  /**
    * Stop loading the current page.
    */
   stopLoading: function() {
