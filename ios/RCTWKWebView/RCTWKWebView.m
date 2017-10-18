@@ -273,19 +273,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
-- (void)findInPage:(NSString *)string {
-  if (string && string.length > 0) {
+- (void)findInPage:(NSString *)searchString completed:(RCTResponseSenderBlock)callback {
+  if (searchString && searchString.length > 0) {
     [_webView removeAllHighlights];
-    NSInteger results = [_webView highlightAllOccurencesOfString:string];
+    NSInteger results = [_webView highlightAllOccurencesOfString:searchString];
     [_webView scrollToHighlightTop];
-    NSString *resultString = [NSString stringWithFormat:@"%@: %ld",@"Search Results",(long) results];
-    UIAlertView *alert = [[UIAlertView alloc]
-                          initWithTitle:resultString
-                          message: nil
-                          delegate: nil
-                          cancelButtonTitle:@"OK"
-                          otherButtonTitles:nil];
-    [alert show];
+    callback(@[@(results)]);
   }
 }
 
