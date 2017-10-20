@@ -12,6 +12,7 @@ package com.phoebe.pbwebview;
 import javax.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -154,8 +155,14 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             url.startsWith("file://")) {
           return false;
         } else {
+          PBWebView webView = (PBWebView) view;
+          ArrayList<Object> customSchemes = webView.getCustomSchemes();
           try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            Uri uri = Uri.parse(url);
+            if (customSchemes != null && customSchemes.contains(uri.getScheme())) {
+              return false;
+            }
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             view.getContext().startActivity(intent);
           } catch (ActivityNotFoundException e) {
@@ -258,6 +265,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   protected static class PBWebView extends WebView implements LifecycleEventListener {
     private @Nullable String injectedJS;
     private boolean messagingEnabled = false;
+    private ArrayList<Object> customSchemes = new ArrayList<>();
 
     private class ReactWebViewBridge {
       PBWebView mContext;
@@ -350,6 +358,14 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
     public void onMessage(String message) {
       dispatchEvent(this, new TopMessageEvent(this.getId(), message));
+    }
+
+    public void setCustomSchemes(ArrayList<Object> schemes) {
+      this.customSchemes = schemes;
+    }
+
+    public ArrayList<Object> getCustomSchemes() {
+      return this.customSchemes;
     }
 
     private void cleanupCallbacksAndDestroy() {
@@ -594,6 +610,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         view.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
       } 
     }
+  }
+
+  @ReactProp(name = "customSchemes")
+  public void setCustomSchemes(WebView view, ReadableArray schemes) {
+    ((PBWebView)view).setCustomSchemes(schemes.toArrayList());
   }
 
   @Override

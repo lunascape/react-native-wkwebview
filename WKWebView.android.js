@@ -147,6 +147,8 @@ class WebView extends React.Component {
      */
     userAgent: PropTypes.string,
 
+    customSchemes: PropTypes.array,
+
     /**
      * Used to locate this view in end-to-end tests.
      */
@@ -253,6 +255,7 @@ class WebView extends React.Component {
         key="webViewKey"
         style={webViewStyles}
         source={resolveAssetSource(source)}
+        customSchemes={this.props.customSchemes}
         scalesPageToFit={this.props.scalesPageToFit}
         injectedJavaScript={this.props.injectedJavaScript}
         userAgent={this.props.userAgent}
