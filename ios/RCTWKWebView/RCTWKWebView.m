@@ -81,6 +81,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _webView.UIDelegate = self;
     _webView.scrollView.delegate = self;
     _webView.navigationDelegate = self;
+    _webView.allowsLinkPreview = NO;
     _webView.scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
     lastOffset = _webView.scrollView.contentOffset;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
