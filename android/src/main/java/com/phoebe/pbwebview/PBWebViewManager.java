@@ -160,7 +160,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
           try {
             Uri uri = Uri.parse(url);
             if (customSchemes != null && customSchemes.contains(uri.getScheme())) {
-              return false;
+              webView.shouldStartLoadWithRequest(url);
+              return true;
             }
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -372,6 +373,18 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       setWebViewClient(null);
       destroy();
     }
+
+    public void shouldStartLoadWithRequest(String url) {
+      // Sending event to JS side
+      WritableMap event = Arguments.createMap();
+      event.putDouble("target", this.getId());
+      event.putString("url", url);
+      event.putBoolean("loading", false);
+      event.putString("title", this.getTitle());
+      event.putBoolean("canGoBack", this.canGoBack());
+      event.putBoolean("canGoForward", this.canGoForward());
+      dispatchEvent(this, PBWebViewEvent.createStartRequestEvent(this.getId(), event));
+    }
   }
 
   public PBWebViewManager() {
@@ -421,8 +434,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             event.putString("title", webView.getTitle());
             event.putBoolean("canGoBack", webView.canGoBack());
             event.putBoolean("canGoForward", webView.canGoForward());
-            dispatchEvent(webView,
-                    new PBWebViewEvent(webView.getId(), event));
+            dispatchEvent(webView, PBWebViewEvent.createNewWindowEvent(webView.getId(), event));
             newView.destroy();
           }
         });
@@ -709,7 +721,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   @Override
   public @Nullable Map getExportedCustomDirectEventTypeConstants() {
     return MapBuilder.of(
-            "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow")
+      "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
+      "shouldStartRequest", MapBuilder.of("registrationName", "onShouldStartLoadWithRequest")
     );
   }
 }
