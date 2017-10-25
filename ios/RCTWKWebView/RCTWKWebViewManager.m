@@ -16,24 +16,13 @@
 {
   NSConditionLock *_shouldStartLoadLock;
   BOOL _shouldStartLoad;
-  WKProcessPool *_processPool;
-}
-
-- (id)init {
-  self = [super init];
-  
-  if (self) {
-    _processPool = [[WKProcessPool alloc] init];
-  }
-  
-  return self;
 }
 
 RCT_EXPORT_MODULE()
 
 - (UIView *)view
 {
-  RCTWKWebView *webView = [[RCTWKWebView alloc] initWithProcessPool:_processPool];
+  RCTWKWebView *webView = [[RCTWKWebView alloc] initWithProcessPool:[WKProcessPool new]];
   webView.delegate = self;
   return webView;
 }
@@ -140,7 +129,7 @@ RCT_EXPORT_METHOD(evaluateJavaScript:(nonnull NSNumber *)reactTag
   }];
 }
 
-RCT_EXPORT_METHOD(findInPage:(nonnull NSNumber *)reactTag searchString:(NSString *)searchString)
+RCT_EXPORT_METHOD(findInPage:(nonnull NSNumber *)reactTag searchString:(NSString *)searchString completed:(RCTResponseSenderBlock)callback)
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
         RCTWKWebView *view = viewRegistry[reactTag];
@@ -148,7 +137,7 @@ RCT_EXPORT_METHOD(findInPage:(nonnull NSNumber *)reactTag searchString:(NSString
             RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
         } else {
             NSLog(@"Search webview with string: %@", searchString);
-            [view findInPage:searchString];
+            [view findInPage:searchString completed:callback];
         }
     }];
 }

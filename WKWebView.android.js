@@ -147,6 +147,8 @@ class WebView extends React.Component {
      */
     userAgent: PropTypes.string,
 
+    customSchemes: PropTypes.array,
+
     /**
      * Used to locate this view in end-to-end tests.
      */
@@ -174,10 +176,13 @@ class WebView extends React.Component {
     /**
      * Allows custom handling of window.open() by a JS handler. Return true
      * or false from this method to use default behavior.
-     * @platform ios
      */
     onShouldCreateNewWindow: PropTypes.func,
-
+    /**
+     * Allows custom handling of any webview requests by a JS handler. Return true
+     * or false from this method to continue loading the request.
+     */
+    onShouldStartLoadWithRequest: PropTypes.func,
     /**
      * Specifies the mixed content mode. i.e WebView will allow a secure origin to load content from any other origin.
      *
@@ -253,6 +258,7 @@ class WebView extends React.Component {
         key="webViewKey"
         style={webViewStyles}
         source={resolveAssetSource(source)}
+        customSchemes={this.props.customSchemes}
         scalesPageToFit={this.props.scalesPageToFit}
         injectedJavaScript={this.props.injectedJavaScript}
         userAgent={this.props.userAgent}
@@ -270,6 +276,7 @@ class WebView extends React.Component {
         testID={this.props.testID}
         mediaPlaybackRequiresUserAction={this.props.mediaPlaybackRequiresUserAction}
         allowUniversalAccessFromFileURLs={this.props.allowUniversalAccessFromFileURLs}
+        onShouldStartLoadWithRequest={this.onShouldStartLoadWithRequest}
         mixedContentMode={this.props.mixedContentMode}
       />;
 
@@ -284,7 +291,7 @@ class WebView extends React.Component {
   goForward = () => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
-      UIManager.RCTWebView.Commands.goForward,
+      UIManager.PBWebView.Commands.goForward,
       null
     );
   };
@@ -292,7 +299,7 @@ class WebView extends React.Component {
   goBack = () => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
-      UIManager.RCTWebView.Commands.goBack,
+      UIManager.PBWebView.Commands.goBack,
       null
     );
   };
@@ -300,7 +307,7 @@ class WebView extends React.Component {
   reload = () => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
-      UIManager.RCTWebView.Commands.reload,
+      UIManager.PBWebView.Commands.reload,
       null
     );
   };
@@ -308,7 +315,7 @@ class WebView extends React.Component {
   stopLoading = () => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
-      UIManager.RCTWebView.Commands.stopLoading,
+      UIManager.PBWebView.Commands.stopLoading,
       null
     );
   };
@@ -316,7 +323,7 @@ class WebView extends React.Component {
   postMessage = (data) => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
-      UIManager.RCTWebView.Commands.postMessage,
+      UIManager.PBWebView.Commands.postMessage,
       [String(data)]
     );
   };
@@ -330,7 +337,7 @@ class WebView extends React.Component {
   injectJavaScript = (data) => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
-      UIManager.RCTWebView.Commands.injectJavaScript,
+      UIManager.PBWebView.Commands.injectJavaScript,
       [data]
     );
   };
@@ -348,6 +355,12 @@ class WebView extends React.Component {
   onShouldCreateNewWindow = (event) => {
     if (this.props.onShouldCreateNewWindow) {
       this.props.onShouldCreateNewWindow(event.nativeEvent);
+    }
+  };
+
+  onShouldStartLoadWithRequest = (event) => {
+    if (this.props.onShouldStartLoadWithRequest) {
+      this.props.onShouldStartLoadWithRequest(event.nativeEvent);
     }
   };
 

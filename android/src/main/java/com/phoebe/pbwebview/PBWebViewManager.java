@@ -12,6 +12,7 @@ package com.phoebe.pbwebview;
 import javax.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -154,8 +155,15 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             url.startsWith("file://")) {
           return false;
         } else {
+          PBWebView webView = (PBWebView) view;
+          ArrayList<Object> customSchemes = webView.getCustomSchemes();
           try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            Uri uri = Uri.parse(url);
+            if (customSchemes != null && customSchemes.contains(uri.getScheme())) {
+              webView.shouldStartLoadWithRequest(url);
+              return true;
+            }
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             view.getContext().startActivity(intent);
           } catch (ActivityNotFoundException e) {
@@ -258,6 +266,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   protected static class PBWebView extends WebView implements LifecycleEventListener {
     private @Nullable String injectedJS;
     private boolean messagingEnabled = false;
+    private ArrayList<Object> customSchemes = new ArrayList<>();
 
     private class ReactWebViewBridge {
       PBWebView mContext;
@@ -352,9 +361,29 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       dispatchEvent(this, new TopMessageEvent(this.getId(), message));
     }
 
+    public void setCustomSchemes(ArrayList<Object> schemes) {
+      this.customSchemes = schemes;
+    }
+
+    public ArrayList<Object> getCustomSchemes() {
+      return this.customSchemes;
+    }
+
     private void cleanupCallbacksAndDestroy() {
       setWebViewClient(null);
       destroy();
+    }
+
+    public void shouldStartLoadWithRequest(String url) {
+      // Sending event to JS side
+      WritableMap event = Arguments.createMap();
+      event.putDouble("target", this.getId());
+      event.putString("url", url);
+      event.putBoolean("loading", false);
+      event.putString("title", this.getTitle());
+      event.putBoolean("canGoBack", this.canGoBack());
+      event.putBoolean("canGoForward", this.canGoForward());
+      dispatchEvent(this, PBWebViewEvent.createStartRequestEvent(this.getId(), event));
     }
   }
 
@@ -405,8 +434,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             event.putString("title", webView.getTitle());
             event.putBoolean("canGoBack", webView.canGoBack());
             event.putBoolean("canGoForward", webView.canGoForward());
-            dispatchEvent(webView,
-                    new PBWebViewEvent(webView.getId(), event));
+            dispatchEvent(webView, PBWebViewEvent.createNewWindowEvent(webView.getId(), event));
             newView.destroy();
           }
         });
@@ -596,6 +624,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     }
   }
 
+  @ReactProp(name = "customSchemes")
+  public void setCustomSchemes(WebView view, ReadableArray schemes) {
+    ((PBWebView)view).setCustomSchemes(schemes.toArrayList());
+  }
+
   @Override
   protected void addEventEmitters(ThemedReactContext reactContext, WebView view) {
     // Do not register default touch emitter and let WebView implementation handle touches
@@ -688,7 +721,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   @Override
   public @Nullable Map getExportedCustomDirectEventTypeConstants() {
     return MapBuilder.of(
-            "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow")
+      "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
+      "shouldStartRequest", MapBuilder.of("registrationName", "onShouldStartLoadWithRequest")
     );
   }
 }

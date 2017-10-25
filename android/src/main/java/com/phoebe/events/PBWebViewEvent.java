@@ -17,34 +17,77 @@ import com.facebook.react.uimanager.events.RCTEventEmitter;
 /**
  * Event emitted when there is an error in loading.
  */
-public class PBWebViewEvent extends Event<PBWebViewEvent> {
 
-  public static final String EVENT_NAME = "createWindow";
-  private WritableMap mEventData;
-
-  public PBWebViewEvent(int viewId, WritableMap eventData) {
-    super(viewId);
-    mEventData = eventData;
+public class PBWebViewEvent {
+  public static PBWebViewCreateWindowEvent createNewWindowEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewCreateWindowEvent(viewId, eventData);
   }
 
-  @Override
-  public String getEventName() {
-    return EVENT_NAME;
+  public static PBWebViewStartRequestEvent createStartRequestEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewStartRequestEvent(viewId, eventData);
   }
 
-  @Override
-  public boolean canCoalesce() {
-    return false;
+  static class PBWebViewCreateWindowEvent extends Event<PBWebViewCreateWindowEvent> {
+
+    public static final String EVENT_NAME = "createWindow";
+    private WritableMap mEventData;
+
+    public PBWebViewCreateWindowEvent(int viewId, WritableMap eventData) {
+      super(viewId);
+      mEventData = eventData;
+    }
+
+    @Override
+    public String getEventName() {
+      return EVENT_NAME;
+    }
+
+    @Override
+    public boolean canCoalesce() {
+      return false;
+    }
+
+    @Override
+    public short getCoalescingKey() {
+      // All events for a given view can be coalesced.
+      return 0;
+    }
+
+    @Override
+    public void dispatch(RCTEventEmitter rctEventEmitter) {
+      rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
+    }
   }
 
-  @Override
-  public short getCoalescingKey() {
-    // All events for a given view can be coalesced.
-    return 0;
-  }
+  static class PBWebViewStartRequestEvent extends Event<PBWebViewStartRequestEvent> {
 
-  @Override
-  public void dispatch(RCTEventEmitter rctEventEmitter) {
-    rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
+    public static final String EVENT_NAME = "shouldStartRequest";
+    private WritableMap mEventData;
+
+    public PBWebViewStartRequestEvent(int viewId, WritableMap eventData) {
+      super(viewId);
+      mEventData = eventData;
+    }
+
+    @Override
+    public String getEventName() {
+      return EVENT_NAME;
+    }
+
+    @Override
+    public boolean canCoalesce() {
+      return false;
+    }
+
+    @Override
+    public short getCoalescingKey() {
+      // All events for a given view can be coalesced.
+      return 0;
+    }
+
+    @Override
+    public void dispatch(RCTEventEmitter rctEventEmitter) {
+      rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
+    }
   }
 }

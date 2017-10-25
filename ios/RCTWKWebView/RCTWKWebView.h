@@ -1,5 +1,5 @@
 #import <WebKit/WebKit.h>
-
+#import <React/RCTEventEmitter.h>
 #import <React/RCTView.h>
 
 @class RCTWKWebView;
@@ -50,7 +50,7 @@ typedef enum {
 - (void)goBack;
 - (void)reload;
 - (void)stopLoading;
-- (void)findInPage:(NSString *)searchString;
+- (void)findInPage:(NSString *)searchString completed:(RCTResponseSenderBlock)callback;
 - (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *error))completionHandler;
 - (void)captureScreen;
 
