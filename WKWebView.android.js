@@ -278,6 +278,7 @@ class WebView extends React.Component {
         allowUniversalAccessFromFileURLs={this.props.allowUniversalAccessFromFileURLs}
         onShouldStartLoadWithRequest={this.onShouldStartLoadWithRequest}
         mixedContentMode={this.props.mixedContentMode}
+        onCaptureScreen={this.onCaptureScreen}
       />;
 
     return (
@@ -308,6 +309,17 @@ class WebView extends React.Component {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
       UIManager.PBWebView.Commands.reload,
+      null
+    );
+  };
+
+  /**
+   * Capture Screen the current page.
+   */
+  captureScreen = () => {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.PBWebView.Commands.captureScreen,
       null
     );
   };
@@ -355,6 +367,12 @@ class WebView extends React.Component {
   onShouldCreateNewWindow = (event) => {
     if (this.props.onShouldCreateNewWindow) {
       this.props.onShouldCreateNewWindow(event.nativeEvent);
+    }
+  };
+
+  onCaptureScreen = (event) => {
+    if (this.props.onCaptureScreen) {
+      this.props.onCaptureScreen(event.nativeEvent);
     }
   };
 

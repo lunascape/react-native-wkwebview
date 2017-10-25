@@ -11,6 +11,8 @@ package com.phoebe.pbwebview;
 
 import javax.annotation.Nullable;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,9 +23,11 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Picture;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -46,6 +50,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.common.ReactConstants;
@@ -113,6 +118,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   public static final int COMMAND_STOP_LOADING = 4;
   public static final int COMMAND_POST_MESSAGE = 5;
   public static final int COMMAND_INJECT_JAVASCRIPT = 6;
+  public static final int CAPTURE_SCREEN = 7;
+
+  public static final String DOWNLOAD_DIRECTORY = Environment.getExternalStorageDirectory() + "/Android/data/jp.co.lunascape.android.ilunascape/downloads/";
 
   // Use `webView.loadUrl("about:blank")` to reliably reset the view
   // state and release page resources (including any running JavaScript).
@@ -257,6 +265,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         }
       });
     }
+
   }
 
   /**
@@ -384,6 +393,35 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       event.putBoolean("canGoBack", this.canGoBack());
       event.putBoolean("canGoForward", this.canGoForward());
       dispatchEvent(this, PBWebViewEvent.createStartRequestEvent(this.getId(), event));
+    }
+
+    public void captureScreen() {
+      final String fileName = System.currentTimeMillis() + ".jpg";
+      File d = new File(DOWNLOAD_DIRECTORY);
+      d.mkdirs();
+      final String localFilePath = DOWNLOAD_DIRECTORY + fileName;
+      boolean success = false;
+      try {
+        Picture picture = this.capturePicture();
+        Bitmap b = Bitmap.createBitmap(this.getMeasuredWidth(), this.getMeasuredHeight(), Bitmap.Config.ARGB_4444);
+        Canvas c = new Canvas(b);
+        picture.draw(c);
+        FileOutputStream fos = new FileOutputStream(localFilePath);
+        if (fos != null) {
+          b.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+          fos.close();
+        }
+        success = true;
+      } catch (Throwable t) {
+      } finally {
+        WritableMap event = Arguments.createMap();
+        event.putDouble("target", this.getId());
+        event.putBoolean("result", success);
+        if (success) {
+          event.putString("data", localFilePath);
+        }
+        dispatchEvent(this, PBWebViewEvent.createCaptureScreenEvent(this.getId(), event));
+      }
     }
   }
 
@@ -620,7 +658,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         view.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
       } else if ("compatibility".equals(mixedContentMode)) {
         view.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-      } 
+      }
     }
   }
 
@@ -643,7 +681,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         "reload", COMMAND_RELOAD,
         "stopLoading", COMMAND_STOP_LOADING,
         "postMessage", COMMAND_POST_MESSAGE,
-        "injectJavaScript", COMMAND_INJECT_JAVASCRIPT
+        "injectJavaScript", COMMAND_INJECT_JAVASCRIPT,
+        "captureScreen", CAPTURE_SCREEN
       );
   }
 
@@ -672,6 +711,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             "try {" +
               "event = new MessageEvent('message', data);" +
             "} catch (e) {" +
+
               "event = document.createEvent('MessageEvent');" +
               "event.initMessageEvent('message', true, true, data.data, data.origin, data.lastEventId, data.source);" +
             "}" +
@@ -683,6 +723,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         break;
       case COMMAND_INJECT_JAVASCRIPT:
         root.loadUrl("javascript:" + args.getString(0));
+        break;
+      case CAPTURE_SCREEN:
+        ((PBWebView) root).captureScreen();
         break;
     }
   }
@@ -722,7 +765,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   public @Nullable Map getExportedCustomDirectEventTypeConstants() {
     return MapBuilder.of(
       "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
-      "shouldStartRequest", MapBuilder.of("registrationName", "onShouldStartLoadWithRequest")
+      "shouldStartRequest", MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"),
+      "captureScreen", MapBuilder.of("registrationName", "onCaptureScreen")
     );
   }
 }

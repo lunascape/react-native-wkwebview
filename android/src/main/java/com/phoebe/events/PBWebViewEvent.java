@@ -23,6 +23,10 @@ public class PBWebViewEvent {
     return new PBWebViewCreateWindowEvent(viewId, eventData);
   }
 
+  public static PBWebViewCaptureScreenEvent createCaptureScreenEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewCaptureScreenEvent(viewId, eventData);
+  }
+
   public static PBWebViewStartRequestEvent createStartRequestEvent(int viewId, WritableMap eventData) {
     return new PBWebViewStartRequestEvent(viewId, eventData);
   }
@@ -33,6 +37,38 @@ public class PBWebViewEvent {
     private WritableMap mEventData;
 
     public PBWebViewCreateWindowEvent(int viewId, WritableMap eventData) {
+      super(viewId);
+      mEventData = eventData;
+    }
+
+    @Override
+    public String getEventName() {
+      return EVENT_NAME;
+    }
+
+    @Override
+    public boolean canCoalesce() {
+      return false;
+    }
+
+    @Override
+    public short getCoalescingKey() {
+      // All events for a given view can be coalesced.
+      return 0;
+    }
+
+    @Override
+    public void dispatch(RCTEventEmitter rctEventEmitter) {
+      rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
+    }
+  }
+
+  static class PBWebViewCaptureScreenEvent extends Event<PBWebViewCreateWindowEvent> {
+
+    public static final String EVENT_NAME = "captureScreen";
+    private WritableMap mEventData;
+
+    public PBWebViewCaptureScreenEvent(int viewId, WritableMap eventData) {
       super(viewId);
       mEventData = eventData;
     }
