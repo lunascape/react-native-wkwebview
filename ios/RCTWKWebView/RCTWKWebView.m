@@ -408,6 +408,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
 {
+  if (error.code == -1002 || error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
+    NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
+    BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
+    if (applicationCanOpen) {
+      [[UIApplication sharedApplication] openURL:url];
+      return;
+    }
+  }
   if (_onLoadingError) {
     if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
       // NSURLErrorCancelled is reported when a page has a redirect OR if you load
