@@ -402,10 +402,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       final String localFilePath = DOWNLOAD_DIRECTORY + fileName;
       boolean success = false;
       try {
-        Picture picture = this.capturePicture();
-        Bitmap b = Bitmap.createBitmap(this.getMeasuredWidth(), this.getMeasuredHeight(), Bitmap.Config.ARGB_4444);
-        Canvas c = new Canvas(b);
-        picture.draw(c);
+        Bitmap b = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(b);
+        this.draw(canvas);
         FileOutputStream fos = new FileOutputStream(localFilePath);
         if (fos != null) {
           b.compress(Bitmap.CompressFormat.JPEG, 80, fos);
