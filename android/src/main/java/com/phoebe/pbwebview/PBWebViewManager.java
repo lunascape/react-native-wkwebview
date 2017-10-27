@@ -24,6 +24,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Picture;
 import android.net.Uri;
 import android.os.Build;
@@ -402,9 +403,17 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       final String localFilePath = DOWNLOAD_DIRECTORY + fileName;
       boolean success = false;
       try {
-        Bitmap b = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
+        WebView lObjWebView = this;
+        lObjWebView.measure(MeasureSpec.makeMeasureSpec(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        lObjWebView.layout(0, 0, lObjWebView.getMeasuredWidth(), lObjWebView.getMeasuredHeight());
+        Bitmap b = Bitmap.createBitmap(lObjWebView.getMeasuredWidth(), lObjWebView.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+
         Canvas canvas = new Canvas(b);
-        this.draw(canvas);
+        Paint paint = new Paint();
+        int iHeight = b.getHeight();
+        canvas.drawBitmap(b, 0, iHeight, paint);
+        lObjWebView.draw(canvas);
+
         FileOutputStream fos = new FileOutputStream(localFilePath);
         if (fos != null) {
           b.compress(Bitmap.CompressFormat.JPEG, 80, fos);
@@ -442,8 +451,10 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
   @Override
   protected WebView createViewInstance(final ThemedReactContext reactContext) {
+    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      WebView.enableSlowWholeDocumentDraw();
+    }
     PBWebView webView = new PBWebView(reactContext);
-
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
