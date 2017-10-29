@@ -396,23 +396,20 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       dispatchEvent(this, PBWebViewEvent.createStartRequestEvent(this.getId(), event));
     }
 
-    public void captureScreen() {
+    public void captureScreen(String message) {
       final String fileName = System.currentTimeMillis() + ".jpg";
+
       File d = new File(DOWNLOAD_DIRECTORY);
       d.mkdirs();
       final String localFilePath = DOWNLOAD_DIRECTORY + fileName;
       boolean success = false;
       try {
-        WebView lObjWebView = this;
-        lObjWebView.measure(MeasureSpec.makeMeasureSpec(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-        lObjWebView.layout(0, 0, lObjWebView.getMeasuredWidth(), lObjWebView.getMeasuredHeight());
-        Bitmap b = Bitmap.createBitmap(lObjWebView.getMeasuredWidth(), lObjWebView.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-
-        Canvas canvas = new Canvas(b);
-        Paint paint = new Paint();
-        int iHeight = b.getHeight();
-        canvas.drawBitmap(b, 0, iHeight, paint);
-        lObjWebView.draw(canvas);
+        Picture picture = this.capturePicture();
+        int width = message.equals("CAPTURE_SCREEN") ? this.getWidth() : picture.getWidth();
+        int height = message.equals("CAPTURE_SCREEN") ? this.getHeight() : picture.getHeight();
+        Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        picture.draw(c);
 
         FileOutputStream fos = new FileOutputStream(localFilePath);
         if (fos != null) {
@@ -421,6 +418,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         }
         success = true;
       } catch (Throwable t) {
+        System.out.println(t);
       } finally {
         WritableMap event = Arguments.createMap();
         event.putDouble("target", this.getId());
@@ -693,7 +691,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         "postMessage", COMMAND_POST_MESSAGE,
         "injectJavaScript", COMMAND_INJECT_JAVASCRIPT,
         "captureScreen", CAPTURE_SCREEN
-      );
+    );
   }
 
   @Override
@@ -735,7 +733,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         root.loadUrl("javascript:" + args.getString(0));
         break;
       case CAPTURE_SCREEN:
-        ((PBWebView) root).captureScreen();
+        ((PBWebView) root).captureScreen(args.getString(0));
         break;
     }
   }

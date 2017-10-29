@@ -316,11 +316,11 @@ class WebView extends React.Component {
   /**
    * Capture Screen the current page.
    */
-  captureScreen = () => {
+  captureScreen = (data) => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
       UIManager.PBWebView.Commands.captureScreen,
-      null
+      [String(data)]
     );
   };
 
