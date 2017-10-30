@@ -408,6 +408,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
 {
+//  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
   if (error.code == -1002 || error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
     NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
     BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
