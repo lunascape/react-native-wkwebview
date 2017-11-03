@@ -52,5 +52,6 @@ typedef enum {
 - (void)stopLoading;
 - (void)findInPage:(NSString *)searchString completed:(RCTResponseSenderBlock)callback;
 - (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *error))completionHandler;
+- (void)printContent;
 
 @end

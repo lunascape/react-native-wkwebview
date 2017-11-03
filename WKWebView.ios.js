@@ -374,11 +374,16 @@ var WKWebView = createReactClass({
       null
     )
   },
-
+  printContent: function() {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.RCTWKWebView.Commands.printContent,
+      null
+    )
+  },
   findInPage: function(searchString, callback) {
     return WKWebViewManager.findInPage(this.getWebViewHandle(), searchString, callback);
   },
-
   evaluateJavaScript: function(js) {
     return WKWebViewManager.evaluateJavaScript(this.getWebViewHandle(), js);
   },

@@ -130,6 +130,16 @@ RCT_EXPORT_METHOD(findInPage:(nonnull NSNumber *)reactTag searchString:(NSString
     }];
 }
 
+RCT_EXPORT_METHOD(printContent:(nonnull NSNumber *)reactTag) {
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
+        RCTWKWebView *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[RCTWKWebView class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
+        } else {
+            [view printContent];
+        }
+    }];
+}
 
 #pragma mark - Exported synchronous methods
 

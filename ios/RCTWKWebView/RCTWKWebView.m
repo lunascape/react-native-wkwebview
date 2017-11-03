@@ -351,6 +351,27 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   @catch (NSException * __unused exception) {}
 }
 
+- (void)printContent {
+  UIPrintInteractionController *controller = [UIPrintInteractionController sharedPrintController];
+  UIPrintInfo *printInfo = [UIPrintInfo printInfo];
+  printInfo.outputType = UIPrintInfoOutputGeneral;
+  printInfo.jobName = _webView.URL.absoluteString;
+  printInfo.duplex = UIPrintInfoDuplexLongEdge;
+  controller.printInfo = printInfo;
+  controller.showsPageRange = YES;
+  
+  UIViewPrintFormatter *viewFormatter = [_webView viewPrintFormatter];
+  viewFormatter.startPage = 0;
+  viewFormatter.contentInsets = UIEdgeInsetsMake(25.0, 25.0, 25.0, 25.0);
+  controller.printFormatter = viewFormatter;
+  
+  [controller presentAnimated:YES completionHandler:^(UIPrintInteractionController * _Nonnull printInteractionController, BOOL completed, NSError * _Nullable error) {
+    if (!completed || error) {
+      NSLog(@"Print FAILED! with error: %@", error.localizedDescription);
+    }
+  }];
+}
+
 #pragma mark - WKNavigationDelegate methods
 
 - (void)webView:(__unused WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
