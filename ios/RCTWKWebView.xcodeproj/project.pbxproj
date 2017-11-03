@@ -16,6 +16,7 @@
 		3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */; };
 		659B7D411F81F75F00EE4040 /* WKWebView+BrowserHack.m in Sources */ = {isa = PBXBuildFile; fileRef = 659B7D401F81F75F00EE4040 /* WKWebView+BrowserHack.m */; };
 		659B7D421F81F82F00EE4040 /* WKWebView+Highlight.m in Sources */ = {isa = PBXBuildFile; fileRef = 659B7D3D1F81F5FC00EE4040 /* WKWebView+Highlight.m */; };
+		65A503371FAC266D00470802 /* WKWebView+Capture.m in Sources */ = {isa = PBXBuildFile; fileRef = 65A503361FAC266D00470802 /* WKWebView+Capture.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +60,8 @@
 		659B7D3E1F81F5FC00EE4040 /* WKWebView+Highlight.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "WKWebView+Highlight.h"; sourceTree = "<group>"; };
 		659B7D3F1F81F75F00EE4040 /* WKWebView+BrowserHack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "WKWebView+BrowserHack.h"; sourceTree = "<group>"; };
 		659B7D401F81F75F00EE4040 /* WKWebView+BrowserHack.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+BrowserHack.m"; sourceTree = "<group>"; };
+		65A503351FAC266D00470802 /* WKWebView+Capture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "WKWebView+Capture.h"; sourceTree = "<group>"; };
+		65A503361FAC266D00470802 /* WKWebView+Capture.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+Capture.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +115,8 @@
 				0B44ACF71F78C0F0000F4C9B /* Localizable.strings */,
 				659B7D3F1F81F75F00EE4040 /* WKWebView+BrowserHack.h */,
 				659B7D401F81F75F00EE4040 /* WKWebView+BrowserHack.m */,
+				65A503351FAC266D00470802 /* WKWebView+Capture.h */,
+				65A503361FAC266D00470802 /* WKWebView+Capture.m */,
 			);
 			path = RCTWKWebView;
 			sourceTree = "<group>";
@@ -172,6 +177,7 @@
 				TargetAttributes = {
 					097457991D2A440A000D9368 = {
 						CreatedOnToolsVersion = 7.3.1;
+						LastSwiftMigration = 0910;
 					};
 					0B6D73F21F172BBF00B4B751 = {
 						CreatedOnToolsVersion = 8.3.3;
@@ -219,6 +225,7 @@
 				3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */,
 				097457AE1D2A4595000D9368 /* RCTWKWebView.m in Sources */,
 				659B7D411F81F75F00EE4040 /* WKWebView+BrowserHack.m in Sources */,
+				65A503371FAC266D00470802 /* WKWebView+Capture.m in Sources */,
 				659B7D421F81F82F00EE4040 /* WKWebView+Highlight.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -294,6 +301,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -331,6 +339,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				SWIFT_VERSION = 3.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -338,6 +347,7 @@
 		097457A41D2A440A000D9368 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../../React/**",
 					"$(inherited)",
@@ -345,15 +355,20 @@
 					"$(SRCROOT)/../react-native/React/**",
 					"$(SRCROOT)/../../../node_modules/react-native/React/**",
 				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RCTWKWebView/RCTWKWebView-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
 		097457A51D2A440A000D9368 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../../React/**",
 					"$(inherited)",
@@ -361,9 +376,12 @@
 					"$(SRCROOT)/../react-native/React/**",
 					"$(SRCROOT)/../../../node_modules/react-native/React/**",
 				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RCTWKWebView/RCTWKWebView-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};

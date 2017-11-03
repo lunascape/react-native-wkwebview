@@ -16,6 +16,7 @@
 
 #import "WKWebView+BrowserHack.h"
 #import "WKWebView+Highlight.h"
+#import "WKWebView+Capture.h"
 
 #define LocalizeString(key) (NSLocalizedStringFromTableInBundle(key, @"Localizable", resourceBundle, nil))
 
@@ -297,32 +298,30 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
                       updateOffset:NO];
 }
 
-- (void)captureScreen
-{
-  CGRect tempFrame = _webView.frame;
-  CGRect screenFrame = _webView.frame;
-  
-  UIGraphicsBeginImageContextWithOptions(screenFrame.size, NO, 0.0);
-  
-  CGContextRef context = UIGraphicsGetCurrentContext();
-  [[UIColor blackColor] set];
-  CGContextFillRect(context, screenFrame);
-  
-  [_webView.layer renderInContext:context];
-  
-  UIImage *screenImage = UIGraphicsGetImageFromCurrentImageContext();
-  
-  UIGraphicsEndImageContext();
-  
-  _webView.frame = tempFrame;
-  
-  NSDate *date = [NSDate new];
-  NSString *fileName = [NSString stringWithFormat:@"%f.png",date.timeIntervalSince1970];
-  NSString * path = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
-  NSData * binaryImageData = UIImagePNGRepresentation(screenImage);
-  [binaryImageData writeToFile:path atomically:YES];
-  
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"captureScreen", @"data":path}});
+- (void)captureScreen:(RCTResponseSenderBlock)callback {
+  [_webView contentFrameCapture:^(UIImage *capturedImage) {
+    NSDate *date = [NSDate new];
+    NSString *fileName = [NSString stringWithFormat:@"%f.png",date.timeIntervalSince1970];
+    NSString * path = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
+    NSData * binaryImageData = UIImagePNGRepresentation(capturedImage);
+    BOOL isWrited = [binaryImageData writeToFile:path atomically:YES];
+    if (isWrited) {
+      callback(@[path]);
+    }
+  }];
+}
+
+- (void)capturePage:(RCTResponseSenderBlock)callback {
+  [_webView contentScrollCapture:^(UIImage *capturedImage) {
+    NSDate *date = [NSDate new];
+    NSString *fileName = [NSString stringWithFormat:@"%f.png",date.timeIntervalSince1970];
+    NSString * path = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
+    NSData * binaryImageData = UIImagePNGRepresentation(capturedImage);
+    BOOL isWrited = [binaryImageData writeToFile:path atomically:YES];
+    if (isWrited) {
+      callback(@[path]);
+    }
+  }];
 }
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor
@@ -377,6 +376,27 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
   }
   @catch (NSException * __unused exception) {}
+}
+
+- (void)printContent {
+  UIPrintInteractionController *controller = [UIPrintInteractionController sharedPrintController];
+  UIPrintInfo *printInfo = [UIPrintInfo printInfo];
+  printInfo.outputType = UIPrintInfoOutputGeneral;
+  printInfo.jobName = _webView.URL.absoluteString;
+  printInfo.duplex = UIPrintInfoDuplexLongEdge;
+  controller.printInfo = printInfo;
+  controller.showsPageRange = YES;
+  
+  UIViewPrintFormatter *viewFormatter = [_webView viewPrintFormatter];
+  viewFormatter.startPage = 0;
+  viewFormatter.contentInsets = UIEdgeInsetsMake(25.0, 25.0, 25.0, 25.0);
+  controller.printFormatter = viewFormatter;
+  
+  [controller presentAnimated:YES completionHandler:^(UIPrintInteractionController * _Nonnull printInteractionController, BOOL completed, NSError * _Nullable error) {
+    if (!completed || error) {
+      NSLog(@"Print FAILED! with error: %@", error.localizedDescription);
+    }
+  }];
 }
 
 #pragma mark - WKNavigationDelegate methods
@@ -436,6 +456,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
 {
+//  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
   if (error.code == -1002 || error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
     NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
     BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];

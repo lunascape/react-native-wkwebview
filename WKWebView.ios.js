@@ -367,14 +367,15 @@ var WKWebView = createReactClass({
   /**
    * Capture Screen the current page.
    */
-  captureScreen: function() {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      UIManager.RCTWKWebView.Commands.captureScreen,
-      null
-    );
+  captureScreen: function(callback) {
+    WKWebViewManager.captureScreen(this.getWebViewHandle(), callback);
   },
-
+  /**
+   * Capture all contents of current page.
+   */
+  capturePage: function(callback) {
+    WKWebViewManager.capturePage(this.getWebViewHandle(), callback);
+  },
   /**
    * Stop loading the current page.
    */
@@ -385,11 +386,16 @@ var WKWebView = createReactClass({
       null
     )
   },
-
+  printContent: function() {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.RCTWKWebView.Commands.printContent,
+      null
+    )
+  },
   findInPage: function(searchString, callback) {
     return WKWebViewManager.findInPage(this.getWebViewHandle(), searchString, callback);
   },
-
   evaluateJavaScript: function(js) {
     return WKWebViewManager.evaluateJavaScript(this.getWebViewHandle(), js);
   },
