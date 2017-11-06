@@ -406,18 +406,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSURLRequest *request = navigationAction.request;
   NSURL* url = request.URL;
   NSString* scheme = url.scheme;
-  NSString *urlString = url.absoluteString;
-  NSString *schem1 = @"https://itunes.apple.com";
-  NSString *schem2 = @"itmss://";
-  NSString *schem3 = @"itms-appss://";
-  // Appstore / Itunes link must prefix with these.
-  if ([urlString hasPrefix:schem1] || [urlString hasPrefix:schem2] || [urlString hasPrefix:schem3]) {
-    BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
-    if (applicationCanOpen) {
-      [[UIApplication sharedApplication] openURL:url];
-      return decisionHandler(WKNavigationActionPolicyCancel);
-    }
-  }
   
   BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
   
