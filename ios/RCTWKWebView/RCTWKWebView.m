@@ -406,6 +406,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSURLRequest *request = navigationAction.request;
   NSURL* url = request.URL;
   NSString* scheme = url.scheme;
+  NSString *urlString = url.absoluteString;
+  NSString *schem1 = @"https://itunes.apple.com";
+  NSString *schem2 = @"itmss://";
+  NSString *schem3 = @"itms-appss://";
+  // Appstore / Itunes link must prefix with these.
+  if ([urlString hasPrefix:schem1] || [urlString hasPrefix:schem2] || [urlString hasPrefix:schem3]) {
+    BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
+    if (applicationCanOpen) {
+      [[UIApplication sharedApplication] openURL:url];
+      return decisionHandler(WKNavigationActionPolicyCancel);
+    }
+  }
   
   BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
   
@@ -457,7 +469,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
 {
 //  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
-  if (error.code == -1002 || error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
+  if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
     NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
     BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
     if (applicationCanOpen) {
