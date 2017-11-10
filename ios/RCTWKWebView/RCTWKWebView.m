@@ -51,6 +51,7 @@
   NSBundle* resourceBundle;
   CGPoint lastOffset;
   BOOL decelerating;
+  BOOL dragging;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -564,6 +565,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+  if (!decelerating && !dragging) {
+    return;
+  }
+  
   CGPoint offset = scrollView.contentOffset;
   CGFloat dy = offset.y - lastOffset.y;
   CGSize frameSize = scrollView.frame.size;
@@ -572,9 +577,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
   
   BOOL shouldLock = !decelerating && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp && lastOffset.y == offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && lastOffset.y >= offsetMin));
-  
+
   if (shouldLock) {
+    scrollView.delegate = nil;
     [scrollView setContentOffset:lastOffset animated:NO];
+    scrollView.delegate = self;
   } else {
     lastOffset = offset;
     if ((!decelerating && ((dy < 0 && _lockScroll == LockDirectionUp && offset.y >= offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && offset.y <= offsetMin))) ||
@@ -582,14 +589,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       dy = 0;
     }
   }
-  
+
   NSDictionary *event = [self onScrollEvent:offset moveDistance:CGPointMake(offset.x - lastOffset.x, dy)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
   decelerating = decelerate;
-  
+  dragging = NO;
+
   NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDrag", @"data":event}});
 }
@@ -600,6 +608,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
   decelerating = NO;
+  dragging = YES;
   
   NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollBeginDrag", @"data":event}});
