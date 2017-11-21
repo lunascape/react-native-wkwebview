@@ -78,12 +78,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     WKUserContentController* userController = [[WKUserContentController alloc]init];
     [userController addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"reactNative"];
     config.userContentController = userController;
-    
     _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:config];
     _webView.UIDelegate = self;
     _webView.scrollView.delegate = self;
     _webView.navigationDelegate = self;
-    _webView.allowsLinkPreview = NO;
+    if ([_webView respondsToSelector:@selector(setAllowsLinkPreview:)]) {
+      [_webView setAllowsLinkPreview:NO];
+    }
     _webView.scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
     lastOffset = _webView.scrollView.contentOffset;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
@@ -457,7 +458,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
 {
-//  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
+  //  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
   if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
     NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
     BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
@@ -577,11 +578,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
   
   BOOL shouldLock = !decelerating && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp && lastOffset.y == offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && lastOffset.y >= offsetMin));
-
+  
   if (shouldLock) {
-    scrollView.delegate = nil;
-    [scrollView setContentOffset:lastOffset animated:NO];
-    scrollView.delegate = self;
+    CGRect scrollBounds = scrollView.bounds;
+    scrollBounds.origin = lastOffset;
+    scrollView.bounds = scrollBounds;
   } else {
     lastOffset = offset;
     if ((!decelerating && ((dy < 0 && _lockScroll == LockDirectionUp && offset.y >= offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && offset.y <= offsetMin))) ||
@@ -589,7 +590,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       dy = 0;
     }
   }
-
+  
   NSDictionary *event = [self onScrollEvent:offset moveDistance:CGPointMake(offset.x - lastOffset.x, dy)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScroll", @"data":event}});
 }
@@ -597,7 +598,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
   decelerating = decelerate;
   dragging = NO;
-
+  
   NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDrag", @"data":event}});
 }
