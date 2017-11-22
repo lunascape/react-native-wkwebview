@@ -247,6 +247,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       NSURL *baseURL = [RCTConvert NSURL:allowingReadAccessToURL];
       [_webView loadFileURL:fileURL allowingReadAccessToURL:baseURL];
       return;
+    } else if (file) {
+      NSURL *tempURL = [self fileURLForBuggyWKWebview8:[RCTConvert NSURL:file]];
+      [_webView loadRequest:[NSURLRequest requestWithURL:tempURL]];
+      return;
     }
     
     // Check for a static html source first
@@ -275,6 +279,27 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     }
     [self loadRequest:request];
   }
+}
+
+- (NSURL *)fileURLForBuggyWKWebview8:(NSURL *)fileURL {
+  if (!fileURL.isFileURL) {
+    return fileURL;
+  }
+  NSError *error = nil;
+  [fileURL checkResourceIsReachableAndReturnError:&error];
+  if (error) {
+    return nil;
+  }
+  NSFileManager *fileManager = [NSFileManager defaultManager];
+  NSURL *tempDir = [[[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"www"] URLByAppendingPathComponent:@"files"];
+  [fileManager createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:nil];
+  NSURL *destURL = [tempDir URLByAppendingPathComponent:fileURL.lastPathComponent];
+  [fileManager removeItemAtURL:destURL error:nil];
+  [fileManager copyItemAtURL:fileURL toURL:destURL error:&error];
+  if (!error) {
+    return destURL;
+  }
+  return nil;
 }
 
 - (void)findInPage:(NSString *)searchString completed:(RCTResponseSenderBlock)callback {
@@ -688,3 +713,4 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 #pragma mark - Custom methods for custom context menu
 
 @end
+
