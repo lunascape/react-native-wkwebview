@@ -240,7 +240,11 @@ var WKWebView = createReactClass({
   },
 
   setNativeProps(nativeProps) {
-    this.refs[RCT_WEBVIEW_REF].setNativeProps(nativeProps);
+    try {
+      this.refs[RCT_WEBVIEW_REF].setNativeProps(nativeProps);
+    } catch (err) {
+      console.log(err);
+    }
   },
 
   render() {
