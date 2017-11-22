@@ -467,6 +467,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
     if (applicationCanOpen) {
       [[UIApplication sharedApplication] openURL:url];
+      if (_onLoadingFinish) {
+        _onLoadingFinish([self baseEvent]);
+      }
       return;
     }
   }
