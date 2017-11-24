@@ -516,6 +516,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
                                       @"code": @(error.code),
                                       @"description": error.localizedDescription,
                                       }];
+    NSString *url = error.userInfo[NSURLErrorFailingURLStringErrorKey];
+    NSDictionary *errorInfo = event.copy;
+    [event setValue:errorInfo forKey:@"error"];
+    [event setValue:url forKey:@"url"];
     _onLoadingError(event);
   }
 }
@@ -719,3 +723,5 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 #pragma mark - Custom methods for custom context menu
 
 @end
+
+
