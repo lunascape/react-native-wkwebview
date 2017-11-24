@@ -52,6 +52,7 @@
   CGPoint lastOffset;
   BOOL decelerating;
   BOOL dragging;
+  BOOL isDisplayingError;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -124,6 +125,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)loadRequest:(NSURLRequest *)request
 {
+  isDisplayingError = NO;
   if (request.URL && _sendCookies) {
     NSDictionary *cookies = [NSHTTPCookie requestHeaderFieldsWithCookies:[[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:request.URL]];
     if ([cookies objectForKey:@"Cookie"]) {
@@ -269,7 +271,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     // passing the redirect urls back here, so we ignore them if trying to load
     // the same url. We'll expose a call to 'reload' to allow a user to load
     // the existing page.
-    if ([request.URL isEqual:_webView.URL]) {
+    // The page will load again when it comeback from error page.
+    if ([request.URL isEqual:_webView.URL] && !isDisplayingError) {
       return;
     }
     if (!request.URL) {
@@ -506,13 +509,17 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       // http://stackoverflow.com/questions/1024748/how-do-i-fix-nsurlerrordomain-error-999-in-iphone-3-0-os
       return;
     }
-    
+    isDisplayingError = YES;
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
     [event addEntriesFromDictionary:@{
                                       @"domain": error.domain,
                                       @"code": @(error.code),
                                       @"description": error.localizedDescription,
                                       }];
+    NSString *url = error.userInfo[NSURLErrorFailingURLStringErrorKey];
+    NSDictionary *errorInfo = event.copy;
+    [event setValue:errorInfo forKey:@"error"];
+    [event setValue:url forKey:@"url"];
     _onLoadingError(event);
   }
 }
@@ -716,4 +723,5 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 #pragma mark - Custom methods for custom context menu
 
 @end
+
 
