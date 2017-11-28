@@ -489,26 +489,33 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
 {
-  //  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
-  if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
-    NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
-    BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
-    if (applicationCanOpen) {
-      [[UIApplication sharedApplication] openURL:url];
-      if (_onLoadingFinish) {
-        _onLoadingFinish([self baseEvent]);
-      }
-      return;
-    }
+  if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
+    // NSURLErrorCancelled is reported when a page has a redirect OR if you load
+    // a new URL in the WebView before the previous one came back. We can just
+    // ignore these since they aren't real errors.
+    // http://stackoverflow.com/questions/1024748/how-do-i-fix-nsurlerrordomain-error-999-in-iphone-3-0-os
+    return;
   }
+  //  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
+  NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
+  BOOL shouldOpenDeeplink = !url || [url.scheme isEqualToString:@"https"] || [url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"ftp"];
+  if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey] && !shouldOpenDeeplink) {
+    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
+      if (success) {
+        if (_onLoadingFinish) {
+          _onLoadingFinish([self baseEvent]);
+        }
+      } else {
+        [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
+      }
+    }];
+  } else {
+    [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
+  }
+}
+
+- (void)sendError:(NSError *)error forURLString:(NSString *)url {
   if (_onLoadingError) {
-    if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
-      // NSURLErrorCancelled is reported when a page has a redirect OR if you load
-      // a new URL in the WebView before the previous one came back. We can just
-      // ignore these since they aren't real errors.
-      // http://stackoverflow.com/questions/1024748/how-do-i-fix-nsurlerrordomain-error-999-in-iphone-3-0-os
-      return;
-    }
     isDisplayingError = YES;
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
     [event addEntriesFromDictionary:@{
@@ -516,7 +523,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
                                       @"code": @(error.code),
                                       @"description": error.localizedDescription,
                                       }];
-    NSString *url = error.userInfo[NSURLErrorFailingURLStringErrorKey];
     NSDictionary *errorInfo = event.copy;
     [event setValue:errorInfo forKey:@"error"];
     [event setValue:url forKey:@"url"];
