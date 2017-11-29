@@ -12,7 +12,10 @@ package com.phoebe.pbwebview;
 import javax.annotation.Nullable;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -120,6 +123,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   public static final int COMMAND_POST_MESSAGE = 5;
   public static final int COMMAND_INJECT_JAVASCRIPT = 6;
   public static final int CAPTURE_SCREEN = 7;
+  public static final int COMMAND_SEARCH_IN_PAGE = 8;
 
   public static final String DOWNLOAD_DIRECTORY = Environment.getExternalStorageDirectory() + "/Android/data/jp.co.lunascape.android.ilunascape/downloads/";
 
@@ -429,6 +433,33 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         dispatchEvent(this, PBWebViewEvent.createCaptureScreenEvent(this.getId(), event));
       }
     }
+
+    public void searchInPage(String keyword) {
+      String[] words = keyword.split(" |　");
+      String[] highlightColors = {
+        "yellow", "cyan", "magenta", "greenyellow", "tomato", "lightskyblue"
+      };
+      try {
+        InputStream fileInputStream;
+        fileInputStream = this.getContext().getAssets().open("SearchWebView.js");
+        byte[] readBytes = new byte[fileInputStream.available()];
+        fileInputStream.read(readBytes);
+        String jsString = new String(readBytes);
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+          String color = i < highlightColors.length ? highlightColors[i] : highlightColors[highlightColors.length - 1];
+          sb.append("MyApp_HighlightAllOccurencesOfString('" + words[i] + "','" + color + "');");
+        }
+        sb.append("alert('" + this.getContext().getString(R.string.dialog_found) + ": ' + MyApp_SearchResultCount);");
+        sb.append("MyApp_ScrollToHighlightTop();");
+        this.loadUrl("javascript:" + jsString + sb.toString());
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   public PBWebViewManager() {
@@ -683,7 +714,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
   @Override
   public @Nullable Map<String, Integer> getCommandsMap() {
-    return MapBuilder.of(
+    Map<String, Integer> map = MapBuilder.of(
         "goBack", COMMAND_GO_BACK,
         "goForward", COMMAND_GO_FORWARD,
         "reload", COMMAND_RELOAD,
@@ -692,6 +723,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         "injectJavaScript", COMMAND_INJECT_JAVASCRIPT,
         "captureScreen", CAPTURE_SCREEN
     );
+    map.put("findInPage", COMMAND_SEARCH_IN_PAGE);
+    return map;
   }
 
   @Override
@@ -734,6 +767,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         break;
       case CAPTURE_SCREEN:
         ((PBWebView) root).captureScreen(args.getString(0));
+        break;
+      case COMMAND_SEARCH_IN_PAGE:
+        ((PBWebView) root).searchInPage(args.getString(0));
         break;
     }
   }

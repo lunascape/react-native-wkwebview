@@ -323,6 +323,17 @@ class WebView extends React.Component {
       [String(data)]
     );
   };
+  
+  /**
+   * Find keyword in the current page.
+   */
+  findInPage = (data, callback) => {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.PBWebView.Commands.findInPage,
+      [String(data), callback]
+    );
+  };
 
   stopLoading = () => {
     UIManager.dispatchViewManagerCommand(
