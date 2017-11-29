@@ -86,7 +86,3 @@ function cumulativeOffsetTop(element) {
     } while (element);
     return valueT;
 }
-
-function test(msg) {
-    alert(msg);
-}
