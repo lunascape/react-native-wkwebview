@@ -1,5 +1,5 @@
 function sendToHost(channel, data) {
-  let message = {
+  var message = {
     'type':channel,
     'data': data
   }
@@ -14,16 +14,16 @@ var _loginInputs = [];
 
 __preload = {
   findLoginForm: function() {
-    let forms = document.getElementsByTagName('form');
+    var forms = document.getElementsByTagName('form');
     _loginInputs = [];
 
-    for(let i = 0; i < forms.length; i++) {
-      let form = forms.item(i);
-      let inputs = form.getElementsByTagName('input');
+    for(var i = 0; i < forms.length; i++) {
+      var form = forms.item(i);
+      var inputs = form.getElementsByTagName('input');
       var accountFields = [];
       var passFields = [];
-      for(let j = 0; j < inputs.length; j++) {
-        let input = inputs.item(j);
+      for(var j = 0; j < inputs.length; j++) {
+        var input = inputs.item(j);
         if (!(input.type === 'password' || input.type === 'text' || input.type === 'email')) {
           continue;
         }
@@ -36,7 +36,7 @@ __preload = {
       }
       // A login should has only 1 password field and 1 account field before password
       if (passFields.length === 1 && accountFields.length === 1) {
-        let accountField = accountFields[0];
+        var accountField = accountFields[0];
         accountField.addEventListener('dblclick', function(e) {
         sendToHost('selectAccount', {'account': e.target.value, 'position':{'x':e.target.x, 'y':e.target.y}});
         });
@@ -51,7 +51,7 @@ __preload = {
     sendToHost('loginForm', {'exist':_loginInputs.length > 0});
   },
   fillPassForm: function(account, password) {
-    for(let i = 0; i < _loginInputs.length; i++) {
+    for(var i = 0; i < _loginInputs.length; i++) {
       _inputAccount = _loginInputs[i]['account'];
       _inputPassword = _loginInputs[i]['password'];
       _inputAccount.value = account;
@@ -59,15 +59,15 @@ __preload = {
     }
   },
   observeSubmit: function() {
-    for(let i = 0; i < _loginInputs.length; i++) {
-      let form = _loginInputs[i]['form'];
+    for(var i = 0; i < _loginInputs.length; i++) {
+      var form = _loginInputs[i]['form'];
       form.addEventListener('submit', function(e) {
-        let inputs = form.getElementsByTagName('input');
+        var inputs = form.getElementsByTagName('input');
         var passFieldExist = false;
         var password = '';
         var account = '';
-        for(let j = 0; j < inputs.length; j++) {
-          let input = inputs.item(j);
+        for(var j = 0; j < inputs.length; j++) {
+          var input = inputs.item(j);
           if (!(input.type === 'password' || input.type === 'text' || input.type === 'email')) {
             continue;
           }
@@ -102,9 +102,9 @@ function MyApp_HighlightAllOccurencesOfStringForElement(element,keyword,color,do
             while (true) {
                 var value = element.nodeValue;  // Search for keyword in text node
                 var idx = value.toLowerCase().indexOf(keyword);
-                
+
                 if (idx < 0) break;             // not found, abort
-                
+
                 var span = doc.createElement("span");
                 var text = doc.createTextNode(value.substr(idx,keyword.length));
                 span.appendChild(text);
@@ -141,7 +141,7 @@ function MyApp_HighlightAllOccurencesOfStringForElement(element,keyword,color,do
 function MyApp_HighlightAllOccurencesOfString(keyword,color) {
     //MyApp_RemoveAllHighlights();
     MyApp_HighlightAllOccurencesOfStringForElement(document.body, keyword.toLowerCase(), color, document);
-    
+
     //    var nodes = document.getElementsByTagName('iframe');
     //    alert("iframe count: " + nodes.length);
     //    for (var i=0; i<nodes.length; i++) {
