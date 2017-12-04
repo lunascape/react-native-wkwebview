@@ -280,6 +280,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       [_webView loadHTMLString:@"" baseURL:nil];
       return;
     }
+    if ([self decisionHandlerURL:request.URL]) {
+      return;
+    }
     [self loadRequest:request];
   }
 }
@@ -440,6 +443,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSURL* url = request.URL;
   NSString* scheme = url.scheme;
   
+  if ([self decisionHandlerURL:url]) {
+    return decisionHandler(WKNavigationActionPolicyCancel);
+  }
+  
   BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
   
   if (longPress) {
@@ -485,6 +492,26 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   else {
     decisionHandler(WKNavigationActionPolicyAllow);
   }
+}
+
+- (BOOL)decisionHandlerURL:(NSURL *)url {
+  if (([url.scheme isEqualToString:@"https"] || [url.scheme isEqualToString:@"http"]) && [url.host isEqualToString:@"itunes.apple.com"]) {
+    NSString *newURLString = [url.absoluteString stringByReplacingOccurrencesOfString:url.scheme withString:@"itms-appss"];
+    NSURL *newURL = [NSURL URLWithString:newURLString];
+    BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:newURL];
+    if (applicationCanOpen) {
+      [[UIApplication sharedApplication] openURL:newURL options:@{} completionHandler:^(BOOL success) {
+        if (success) {
+          if (_onLoadingFinish) {
+            _onLoadingFinish([self baseEvent]);
+          }
+          NSLog(@"Launching %@ was successfull", url);
+        }
+      }];
+      return YES;
+    }
+  }
+  return NO;
 }
 
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
@@ -729,5 +756,4 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 #pragma mark - Custom methods for custom context menu
 
 @end
-
 
