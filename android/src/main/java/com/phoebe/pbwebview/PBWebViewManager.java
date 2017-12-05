@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -168,24 +170,22 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
           ArrayList<Object> customSchemes = webView.getCustomSchemes();
           try {
             Uri uri = Uri.parse(url);
-            // Checking supported scheme only
-            if (customSchemes != null && customSchemes.contains(uri.getScheme())) {
-              webView.shouldStartLoadWithRequest(url);
-              return true;
-            } else if (uri.getScheme().equalsIgnoreCase("intent")) {
-              // Get payload and scheme the intent wants to open
-              Pattern pattern = Pattern.compile("^intent://(\\S*)#Intent;.*scheme=([a-zA-Z]+)");
-              Matcher matcher = pattern.matcher(url);
+            Uri payloadUri = uri.normalizeScheme();
+            if (payloadUri.getScheme() != null && payloadUri.getScheme().equals("intent")) {
+              // convert intent:// to scheme://
+              Pattern pattern = Pattern.compile("^Intent(;.*;|;)scheme=(.+?)(;.*;|;)end$");
+              Matcher matcher = pattern.matcher(payloadUri.getFragment());
               if (matcher.find()) {
-                String payload = matcher.group(1);
-                String scheme = matcher.group(2);
-                // Checking supported scheme only
-                if (customSchemes != null && customSchemes.contains(scheme)) {
-                  String convertedUrl = scheme + "://" + payload;
-                  webView.shouldStartLoadWithRequest(convertedUrl);
-                  return true;
-                }
+                payloadUri = payloadUri.buildUpon()
+                        .scheme(matcher.group(2))
+                        .fragment("")
+                        .build();
               }
+            }
+            // Checking supported scheme only
+            if (customSchemes != null && customSchemes.contains(payloadUri.getScheme())) {
+              webView.shouldStartLoadWithRequest(payloadUri.toString());
+              return true;
             }
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
