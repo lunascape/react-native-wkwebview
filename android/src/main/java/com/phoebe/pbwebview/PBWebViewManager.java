@@ -168,9 +168,24 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
           ArrayList<Object> customSchemes = webView.getCustomSchemes();
           try {
             Uri uri = Uri.parse(url);
+            // Checking supported scheme only
             if (customSchemes != null && customSchemes.contains(uri.getScheme())) {
               webView.shouldStartLoadWithRequest(url);
               return true;
+            } else if (uri.getScheme().equalsIgnoreCase("intent")) {
+              // Get payload and scheme the intent wants to open
+              Pattern pattern = Pattern.compile("^intent://(\\S*)#Intent;.*scheme=([a-zA-Z]+)");
+              Matcher matcher = pattern.matcher(url);
+              if (matcher.find()) {
+                String payload = matcher.group(1);
+                String scheme = matcher.group(2);
+                // Checking supported scheme only
+                if (customSchemes != null && customSchemes.contains(scheme)) {
+                  String convertedUrl = scheme + "://" + payload;
+                  webView.shouldStartLoadWithRequest(convertedUrl);
+                  return true;
+                }
+              }
             }
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
