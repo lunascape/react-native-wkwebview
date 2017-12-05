@@ -171,6 +171,15 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             if (customSchemes != null && customSchemes.contains(uri.getScheme())) {
               webView.shouldStartLoadWithRequest(url);
               return true;
+            } else if (uri.getScheme().equalsIgnoreCase("intent")) {
+              // Treat specific for mdviewer intent only
+              Pattern pattern = Pattern.compile("^intent://(\\S*)#Intent;.*package=jp.mediado.mdviewer");
+              Matcher matcher = pattern.matcher(url);
+              if (matcher.find()) {
+                String convertedUrl = "mdbooks://" + matcher.group(1);
+                webView.shouldStartLoadWithRequest(convertedUrl);
+                return true;
+              }
             }
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
