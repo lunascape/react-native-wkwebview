@@ -527,15 +527,22 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
   BOOL shouldOpenDeeplink = !url || [url.scheme isEqualToString:@"https"] || [url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"ftp"];
   if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey] && !shouldOpenDeeplink) {
-    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
-      if (success) {
-        if (_onLoadingFinish) {
-          _onLoadingFinish([self baseEvent]);
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(openURL:options:completionHandler:)]) {
+      [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
+        if (success) {
+          if (_onLoadingFinish) {
+            _onLoadingFinish([self baseEvent]);
+          }
+        } else {
+          [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
         }
-      } else {
-        [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
+      }];
+    } else {
+      [[UIApplication sharedApplication] openURL:url];
+      if (_onLoadingFinish) {
+        _onLoadingFinish([self baseEvent]);
       }
-    }];
+    }
   } else {
     [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
   }
