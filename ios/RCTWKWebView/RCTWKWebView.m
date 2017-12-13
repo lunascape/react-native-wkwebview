@@ -232,13 +232,19 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)setSource:(NSDictionary *)source
 {
   if (![_source isEqualToDictionary:source]) {
+    NSString *customAgent = source[@"customUserAgent"];
+    NSString *oldAgent = _source[@"customUserAgent"];
     _source = [source copy];
     _sendCookies = [source[@"sendCookies"] boolValue];
-    if ([source[@"customUserAgent"] length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
+    if ([customAgent length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
       [_webView setCustomUserAgent:source[@"customUserAgent"]];
     } else {
-      [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": source[@"customUserAgent"]}];
+      [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": customAgent}];
       [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    if (![customAgent isEqualToString:oldAgent]) {
+      [self reload];
+      return;
     }
     
     // Allow loading local files:
