@@ -21,16 +21,15 @@ import java.util.Map;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Picture;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -51,7 +50,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.common.ReactConstants;
@@ -120,6 +118,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   public static final int COMMAND_POST_MESSAGE = 5;
   public static final int COMMAND_INJECT_JAVASCRIPT = 6;
   public static final int CAPTURE_SCREEN = 7;
+  public static final int SET_GEOLOCATION_PERMISSION = 8;
 
   public static final String DOWNLOAD_DIRECTORY = Environment.getExternalStorageDirectory() + "/Android/data/jp.co.lunascape.android.ilunascape/downloads/";
 
@@ -277,6 +276,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     private @Nullable String injectedJS;
     private boolean messagingEnabled = false;
     private ArrayList<Object> customSchemes = new ArrayList<>();
+    private GeolocationPermissions.Callback _callback;
 
     private class ReactWebViewBridge {
       PBWebView mContext;
@@ -429,6 +429,17 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         dispatchEvent(this, PBWebViewEvent.createCaptureScreenEvent(this.getId(), event));
       }
     }
+
+    public void setGeolocationPermissionCallback(GeolocationPermissions.Callback callback) {
+      this._callback = callback;
+    }
+
+    public void setGeolocationPermission(String origin, boolean allow) {
+      if (this._callback != null) {
+        this._callback.invoke(origin, allow, false);
+        this.setGeolocationPermissionCallback(null);
+      }
+    }
   }
 
   public PBWebViewManager() {
@@ -452,7 +463,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       WebView.enableSlowWholeDocumentDraw();
     }
-    PBWebView webView = new PBWebView(reactContext);
+    final PBWebView webView = new PBWebView(reactContext);
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
@@ -464,8 +475,32 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       }
 
       @Override
-      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-        callback.invoke(origin, true, false);
+      public void onGeolocationPermissionsShowPrompt(final String origin, final GeolocationPermissions.Callback callback) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+          final boolean remember = false;
+          AlertDialog.Builder builder = new AlertDialog.Builder(webView.getContext());
+          builder.setTitle(webView.getContext().getResources().getString(R.string.locations));
+          builder.setMessage(webView.getContext().getResources().getString(R.string.locations_ask_permission))
+                  .setCancelable(true).setPositiveButton(webView.getContext().getResources().getString(R.string.allow), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+              // origin, allow, remember
+              callback.invoke(origin, true, remember);
+            }
+          }).setNegativeButton(webView.getContext().getResources().getString(R.string.dont_allow), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+              // origin, allow, remember
+              callback.invoke(origin, false, remember);
+            }
+          });
+          AlertDialog alert = builder.create();
+          alert.show();
+        } else {
+          webView.setGeolocationPermissionCallback(callback);
+          WritableMap event = Arguments.createMap();
+          event.putDouble("target", webView.getId());
+          event.putString("origin", origin);
+          dispatchEvent(webView, PBWebViewEvent.createLocationAskPermissionEvent(webView.getId(), event));
+        }
       }
       @Override
       public boolean onCreateWindow(final WebView webView, boolean isDialog, boolean isUserGesture, Message resultMsg) {
@@ -683,7 +718,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
   @Override
   public @Nullable Map<String, Integer> getCommandsMap() {
-    return MapBuilder.of(
+    Map<String, Integer> map = MapBuilder.of(
         "goBack", COMMAND_GO_BACK,
         "goForward", COMMAND_GO_FORWARD,
         "reload", COMMAND_RELOAD,
@@ -692,6 +727,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         "injectJavaScript", COMMAND_INJECT_JAVASCRIPT,
         "captureScreen", CAPTURE_SCREEN
     );
+    map.put("setGeolocationPermission", SET_GEOLOCATION_PERMISSION);
+    return map;
   }
 
   @Override
@@ -735,6 +772,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       case CAPTURE_SCREEN:
         ((PBWebView) root).captureScreen(args.getString(0));
         break;
+      case SET_GEOLOCATION_PERMISSION:
+        if (args.size() == 2) {
+          ((PBWebView) root).setGeolocationPermission(args.getString(0), args.getBoolean(1));
+        }
+        break;
     }
   }
 
@@ -774,7 +816,8 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     return MapBuilder.of(
       "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
       "shouldStartRequest", MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"),
-      "captureScreen", MapBuilder.of("registrationName", "onCaptureScreen")
+      "captureScreen", MapBuilder.of("registrationName", "onCaptureScreen"),
+      "askLocationPermission", MapBuilder.of("registrationName", "onLocationAskPermission")
     );
   }
 }

@@ -31,6 +31,10 @@ public class PBWebViewEvent {
     return new PBWebViewStartRequestEvent(viewId, eventData);
   }
 
+  public static PBWebViewLocationAskPermissionEvent createLocationAskPermissionEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewLocationAskPermissionEvent(viewId, eventData);
+  }
+
   static class PBWebViewCreateWindowEvent extends Event<PBWebViewCreateWindowEvent> {
 
     public static final String EVENT_NAME = "createWindow";
@@ -101,6 +105,38 @@ public class PBWebViewEvent {
     private WritableMap mEventData;
 
     public PBWebViewStartRequestEvent(int viewId, WritableMap eventData) {
+      super(viewId);
+      mEventData = eventData;
+    }
+
+    @Override
+    public String getEventName() {
+      return EVENT_NAME;
+    }
+
+    @Override
+    public boolean canCoalesce() {
+      return false;
+    }
+
+    @Override
+    public short getCoalescingKey() {
+      // All events for a given view can be coalesced.
+      return 0;
+    }
+
+    @Override
+    public void dispatch(RCTEventEmitter rctEventEmitter) {
+      rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
+    }
+  }
+
+  static class PBWebViewLocationAskPermissionEvent extends Event<PBWebViewStartRequestEvent> {
+
+    public static final String EVENT_NAME = "askLocationPermission";
+    private WritableMap mEventData;
+
+    public PBWebViewLocationAskPermissionEvent(int viewId, WritableMap eventData) {
       super(viewId);
       mEventData = eventData;
     }

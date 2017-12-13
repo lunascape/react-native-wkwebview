@@ -279,6 +279,7 @@ class WebView extends React.Component {
         onShouldStartLoadWithRequest={this.onShouldStartLoadWithRequest}
         mixedContentMode={this.props.mixedContentMode}
         onCaptureScreen={this.onCaptureScreen}
+        onLocationAskPermission={this.onLocationAskPermission}
       />;
 
     return (
@@ -321,6 +322,14 @@ class WebView extends React.Component {
       this.getWebViewHandle(),
       UIManager.PBWebView.Commands.captureScreen,
       [String(data)]
+    );
+  };
+
+  setGeolocationPermission = (origin, allow) => {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.PBWebView.Commands.setGeolocationPermission,
+      [String(origin), Boolean(allow)]
     );
   };
 
@@ -375,6 +384,12 @@ class WebView extends React.Component {
       this.props.onCaptureScreen(event.nativeEvent);
     }
   };
+
+  onLocationAskPermission = (event) => {
+    if (this.props.onLocationAskPermission) {
+      this.props.onLocationAskPermission(event.nativeEvent);
+    }
+  }
 
   onShouldStartLoadWithRequest = (event) => {
     if (this.props.onShouldStartLoadWithRequest) {
