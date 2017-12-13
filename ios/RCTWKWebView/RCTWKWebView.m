@@ -236,6 +236,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _sendCookies = [source[@"sendCookies"] boolValue];
     if ([source[@"customUserAgent"] length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
       [_webView setCustomUserAgent:source[@"customUserAgent"]];
+    } else {
+      [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": source[@"customUserAgent"]}];
+      [[NSUserDefaults standardUserDefaults] synchronize];
     }
     
     // Allow loading local files:
