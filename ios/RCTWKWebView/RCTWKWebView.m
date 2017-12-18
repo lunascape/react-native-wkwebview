@@ -243,7 +243,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       [[NSUserDefaults standardUserDefaults] synchronize];
     }
     if (![customAgent isEqualToString:oldAgent]) {
-      [self reload];
       return;
     }
     
