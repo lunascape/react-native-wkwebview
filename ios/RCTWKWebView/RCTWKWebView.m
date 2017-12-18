@@ -242,10 +242,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": customAgent}];
       [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    if (![customAgent isEqualToString:oldAgent]) {
+    if (![customAgent isEqualToString:oldAgent] && oldAgent) {
       return;
     }
-    
     // Allow loading local files:
     // <WKWebView source={{ file: RNFS.MainBundlePath + '/data/index.html', allowingReadAccessToURL: RNFS.MainBundlePath }} />
     // Only works for iOS 9+. So iOS 8 will simply ignore those two values
