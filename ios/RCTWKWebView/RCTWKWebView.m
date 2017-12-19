@@ -232,12 +232,19 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)setSource:(NSDictionary *)source
 {
   if (![_source isEqualToDictionary:source]) {
+    NSString *customAgent = source[@"customUserAgent"];
+    NSString *oldAgent = _source[@"customUserAgent"];
     _source = [source copy];
     _sendCookies = [source[@"sendCookies"] boolValue];
-    if ([source[@"customUserAgent"] length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
+    if ([customAgent length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
       [_webView setCustomUserAgent:source[@"customUserAgent"]];
+    } else {
+      [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": customAgent}];
+      [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    
+    if (![customAgent isEqualToString:oldAgent] && oldAgent) {
+      return;
+    }
     // Allow loading local files:
     // <WKWebView source={{ file: RNFS.MainBundlePath + '/data/index.html', allowingReadAccessToURL: RNFS.MainBundlePath }} />
     // Only works for iOS 9+. So iOS 8 will simply ignore those two values
