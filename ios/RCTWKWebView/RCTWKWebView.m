@@ -498,8 +498,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   if (([url.scheme isEqualToString:@"https"] || [url.scheme isEqualToString:@"http"]) && [url.host isEqualToString:@"itunes.apple.com"]) {
     NSString *newURLString = [url.absoluteString stringByReplacingOccurrencesOfString:url.scheme withString:@"itms-appss"];
     NSURL *newURL = [NSURL URLWithString:newURLString];
-    BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:newURL];
-    if (applicationCanOpen) {
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(openURL:options:completionHandler:)]) {
       [[UIApplication sharedApplication] openURL:newURL options:@{} completionHandler:^(BOOL success) {
         if (success) {
           if (_onLoadingFinish) {
@@ -508,8 +507,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
           NSLog(@"Launching %@ was successfull", url);
         }
       }];
-      return YES;
+    } else {
+      [[UIApplication sharedApplication] openURL:newURL];
     }
+    return YES;
   }
   return NO;
 }
