@@ -10,7 +10,6 @@
 package com.phoebe.events;
 
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 
@@ -19,131 +18,45 @@ import com.facebook.react.uimanager.events.RCTEventEmitter;
  */
 
 public class PBWebViewEvent {
-  public static PBWebViewCreateWindowEvent createNewWindowEvent(int viewId, WritableMap eventData) {
-    return new PBWebViewCreateWindowEvent(viewId, eventData);
+  public static final String CREATE_WINDOW_EVENT_NAME = "createWindow";
+  public static final String CAPTURE_SCREEN_EVENT_NAME = "captureScreen";
+  public static final String SHOULD_START_REQUEST_EVENT_NAME = "shouldStartRequest";
+  public static final String ASK_LOCATION_PERMISSION_EVENT_NAME = "askLocationPermission";
+  public static final String ON_MESSAGE_EVENT_NAME = "onLsMessage";
+
+  public static PBWebViewGenericEvent createNewWindowEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewGenericEvent(viewId, CREATE_WINDOW_EVENT_NAME, eventData);
   }
 
-  public static PBWebViewCaptureScreenEvent createCaptureScreenEvent(int viewId, WritableMap eventData) {
-    return new PBWebViewCaptureScreenEvent(viewId, eventData);
+  public static PBWebViewGenericEvent createCaptureScreenEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewGenericEvent(viewId, CAPTURE_SCREEN_EVENT_NAME, eventData);
   }
 
-  public static PBWebViewStartRequestEvent createStartRequestEvent(int viewId, WritableMap eventData) {
-    return new PBWebViewStartRequestEvent(viewId, eventData);
+  public static PBWebViewGenericEvent createStartRequestEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewGenericEvent(viewId, SHOULD_START_REQUEST_EVENT_NAME, eventData);
   }
 
-  public static PBWebViewLocationAskPermissionEvent createLocationAskPermissionEvent(int viewId, WritableMap eventData) {
-    return new PBWebViewLocationAskPermissionEvent(viewId, eventData);
+  public static PBWebViewGenericEvent createLocationAskPermissionEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewGenericEvent(viewId, ASK_LOCATION_PERMISSION_EVENT_NAME, eventData);
   }
 
-  static class PBWebViewCreateWindowEvent extends Event<PBWebViewCreateWindowEvent> {
+  public static PBWebViewGenericEvent createMessageEvent(int viewId, WritableMap eventData) {
+    return new PBWebViewGenericEvent(viewId, ON_MESSAGE_EVENT_NAME, eventData);
+  }
 
-    public static final String EVENT_NAME = "createWindow";
+  static class PBWebViewGenericEvent extends Event<PBWebViewGenericEvent> {
+    public String eventName;
     private WritableMap mEventData;
 
-    public PBWebViewCreateWindowEvent(int viewId, WritableMap eventData) {
+    public PBWebViewGenericEvent(int viewId, String eventName, WritableMap eventData) {
       super(viewId);
-      mEventData = eventData;
+      this.mEventData = eventData;
+      this.eventName = eventName;
     }
 
     @Override
     public String getEventName() {
-      return EVENT_NAME;
-    }
-
-    @Override
-    public boolean canCoalesce() {
-      return false;
-    }
-
-    @Override
-    public short getCoalescingKey() {
-      // All events for a given view can be coalesced.
-      return 0;
-    }
-
-    @Override
-    public void dispatch(RCTEventEmitter rctEventEmitter) {
-      rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
-    }
-  }
-
-  static class PBWebViewCaptureScreenEvent extends Event<PBWebViewCreateWindowEvent> {
-
-    public static final String EVENT_NAME = "captureScreen";
-    private WritableMap mEventData;
-
-    public PBWebViewCaptureScreenEvent(int viewId, WritableMap eventData) {
-      super(viewId);
-      mEventData = eventData;
-    }
-
-    @Override
-    public String getEventName() {
-      return EVENT_NAME;
-    }
-
-    @Override
-    public boolean canCoalesce() {
-      return false;
-    }
-
-    @Override
-    public short getCoalescingKey() {
-      // All events for a given view can be coalesced.
-      return 0;
-    }
-
-    @Override
-    public void dispatch(RCTEventEmitter rctEventEmitter) {
-      rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
-    }
-  }
-
-  static class PBWebViewStartRequestEvent extends Event<PBWebViewStartRequestEvent> {
-
-    public static final String EVENT_NAME = "shouldStartRequest";
-    private WritableMap mEventData;
-
-    public PBWebViewStartRequestEvent(int viewId, WritableMap eventData) {
-      super(viewId);
-      mEventData = eventData;
-    }
-
-    @Override
-    public String getEventName() {
-      return EVENT_NAME;
-    }
-
-    @Override
-    public boolean canCoalesce() {
-      return false;
-    }
-
-    @Override
-    public short getCoalescingKey() {
-      // All events for a given view can be coalesced.
-      return 0;
-    }
-
-    @Override
-    public void dispatch(RCTEventEmitter rctEventEmitter) {
-      rctEventEmitter.receiveEvent(getViewTag(), getEventName(), mEventData);
-    }
-  }
-
-  static class PBWebViewLocationAskPermissionEvent extends Event<PBWebViewStartRequestEvent> {
-
-    public static final String EVENT_NAME = "askLocationPermission";
-    private WritableMap mEventData;
-
-    public PBWebViewLocationAskPermissionEvent(int viewId, WritableMap eventData) {
-      super(viewId);
-      mEventData = eventData;
-    }
-
-    @Override
-    public String getEventName() {
-      return EVENT_NAME;
+      return this.eventName;
     }
 
     @Override
