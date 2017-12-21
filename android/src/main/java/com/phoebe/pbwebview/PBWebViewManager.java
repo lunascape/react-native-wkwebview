@@ -583,7 +583,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
                 if (type == HitTestResult.SRC_ANCHOR_TYPE) {
                   image_url = "";
                 }
-                webView.onMessage(String.format("{\"url\":\"%s\",\"image_url\":\"%s\"}", url, image_url));
+                WritableMap data = Arguments.createMap();
+                data.putString("type", "contextmenu");
+                data.putString("url", url);
+                data.putString("image_url", image_url);
+                dispatchEvent(webView, PBWebViewEvent.createMessageEvent(webView.getId(), data));
               }
             }
           };
@@ -831,10 +835,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   @Override
   public @Nullable Map getExportedCustomDirectEventTypeConstants() {
     return MapBuilder.of(
-      "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
-      "shouldStartRequest", MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"),
-      "captureScreen", MapBuilder.of("registrationName", "onCaptureScreen"),
-      "askLocationPermission", MapBuilder.of("registrationName", "onLocationAskPermission")
+      PBWebViewEvent.CREATE_WINDOW_EVENT_NAME, MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
+      PBWebViewEvent.SHOULD_START_REQUEST_EVENT_NAME, MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"),
+      PBWebViewEvent.CAPTURE_SCREEN_EVENT_NAME, MapBuilder.of("registrationName", "onCaptureScreen"),
+      PBWebViewEvent.ASK_LOCATION_PERMISSION_EVENT_NAME, MapBuilder.of("registrationName", "onLocationAskPermission"),
+      PBWebViewEvent.ON_MESSAGE_EVENT_NAME, MapBuilder.of("registrationName", "onLsMessage")
     );
   }
 }
