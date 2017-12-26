@@ -320,6 +320,7 @@ var WKWebView = createReactClass({
         onLoadingError={this._onLoadingError}
         onProgress={this._onProgress}
         onMessage={this._onMessage}
+        onNavigationStateChange={(event) => this._updateNavigationState(event)}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         onShouldCreateNewWindow={onShouldCreateNewWindow}
         pagingEnabled={this.props.pagingEnabled}
