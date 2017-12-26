@@ -35,6 +35,7 @@
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingStart;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingFinish;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingError;
+@property (nonatomic, copy) RCTDirectEventBlock onNavigationStateChange;
 @property (nonatomic, copy) RCTDirectEventBlock onShouldStartLoadWithRequest;
 @property (nonatomic, copy) RCTDirectEventBlock onShouldCreateNewWindow;
 @property (nonatomic, copy) RCTDirectEventBlock onProgress;
@@ -89,6 +90,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _webView.scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
     lastOffset = _webView.scrollView.contentOffset;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"title" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"loading" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"canGoBack" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"canGoForward" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:nil];
     [self addSubview:_webView];
     
     UILongPressGestureRecognizer* longGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressed:)];
@@ -407,6 +413,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       return;
     }
     _onProgress(@{@"progress": [change objectForKey:NSKeyValueChangeNewKey]});
+  } else if ([keyPath isEqualToString:@"title"] || [keyPath isEqualToString:@"loading"] || [keyPath isEqualToString:@"canGoBack"] || [keyPath isEqualToString:@"canGoForward"] || [keyPath isEqualToString:@"URL"]) {
+    if (_onNavigationStateChange) {
+      _onNavigationStateChange([self baseEvent]);
+    }
   }
 }
 
@@ -414,6 +424,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 {
   @try {
     [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
+    [_webView removeObserver:self forKeyPath:@"title"];
+    [_webView removeObserver:self forKeyPath:@"loading"];
+    [_webView removeObserver:self forKeyPath:@"canGoBack"];
+    [_webView removeObserver:self forKeyPath:@"canGoForward"];
+    [_webView removeObserver:self forKeyPath:@"URL"];
     _webView.UIDelegate = nil;
     _webView.scrollView.delegate = nil;
     _webView.navigationDelegate = nil;
@@ -498,6 +513,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
   else {
     decisionHandler(WKNavigationActionPolicyAllow);
+  }
+  
+  if (navigationAction.navigationType == WKNavigationTypeLinkActivated) {
+    // Skip scroll handler if user navigate to an anchor link
+    webView.scrollView.delegate = nil;
+    // Scrolling would be completed very soon
+    float timeout = 0.05;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      // Reactivate scroll handler manually as no event called in this case
+      lastOffset = webView.scrollView.contentOffset;
+      webView.scrollView.delegate = self;
+    });
   }
 }
 
