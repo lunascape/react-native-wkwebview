@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
@@ -28,12 +29,15 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Picture;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +54,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -295,6 +300,10 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     private ArrayList<Object> customSchemes = new ArrayList<>();
     private GeolocationPermissions.Callback _callback;
 
+    private Rect mContentInset;
+    private Rect mClipBounds = new Rect();
+    DisplayMetrics mDeviceMetrics;
+
     private class ReactWebViewBridge {
       PBWebView mContext;
 
@@ -317,6 +326,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
      */
     public PBWebView(ThemedReactContext reactContext) {
       super(reactContext);
+
+      mContentInset = new Rect();
+      mDeviceMetrics = this.getResources().getDisplayMetrics();
     }
 
     @Override
@@ -456,6 +468,84 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         this._callback.invoke(origin, allow, false);
         this.setGeolocationPermissionCallback(null);
       }
+    }
+
+    public void setContentInset(Rect inset) {
+      this.mContentInset.top = (int)(inset.top * this.mDeviceMetrics.density);
+      this.mContentInset.left = (int)(inset.left * this.mDeviceMetrics.density);
+      this.mContentInset.right = (int)(inset.right * this.mDeviceMetrics.density);
+      this.mContentInset.bottom = (int)(inset.bottom * this.mDeviceMetrics.density);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+
+      canvas.save();
+
+      if(this.mContentInset != null && this.mContentInset.top != 0) {
+        final int sy = getScrollY();
+        final int sx = getScrollX();
+        mClipBounds.top = sy;
+        mClipBounds.left = sx;
+        mClipBounds.right = mClipBounds.left + getWidth();
+        mClipBounds.bottom = mClipBounds.top + getHeight();
+        canvas.clipRect(mClipBounds);
+
+        // translate
+        int titleBarOffs = getVisibleTitleHeightCompat();
+        if(titleBarOffs < 0) titleBarOffs = 0;
+        canvas.translate(0, titleBarOffs);
+      }
+
+      super.onDraw(canvas);
+      canvas.restore();
+    }
+
+    @Override
+    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+      WritableMap eventData = Arguments.createMap();
+      WritableMap data = Arguments.createMap();
+      data.putInt("x", (int)(l / this.mDeviceMetrics.density));
+      data.putInt("y", (int)(t / this.mDeviceMetrics.density));
+      data.putInt("lastX", (int)(oldl / this.mDeviceMetrics.density));
+      data.putInt("lastY", (int)(oldt / this.mDeviceMetrics.density));
+      eventData.putString("type", "onScroll");
+      eventData.putMap("data", data);
+
+      dispatchEvent(this, PBWebViewEvent.createMessageEvent(this.getId(), eventData));
+    }
+
+    @Override
+    protected int computeVerticalScrollExtent() {
+      if(this.mContentInset == null) return super.computeVerticalScrollExtent();
+      return getViewHeightWithTitle() - getVisibleTitleHeightCompat();
+    }
+
+    @Override
+    protected int computeVerticalScrollOffset() {
+      if(this.mContentInset == null) return super.computeVerticalScrollOffset();
+      return Math.max(getScrollY(), getTitleHeight());
+    }
+
+    @Override
+    protected int computeVerticalScrollRange() {
+      return getHeight() - getTitleHeight();
+    }
+
+    private int getTitleHeight() {
+      return this.mContentInset.top;
+    }
+
+    private int getViewHeightWithTitle() {
+      int height = getHeight();
+      if(isHorizontalScrollBarEnabled() && !overlayHorizontalScrollbar()) {
+        height -= getHorizontalScrollbarHeight();
+      }
+      return height;
+    }
+
+    protected int getVisibleTitleHeightCompat() {
+      return Math.max(getTitleHeight() - Math.max(0, getScrollY()), 0);
     }
   }
 
@@ -729,6 +819,20 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   @ReactProp(name = "customSchemes")
   public void setCustomSchemes(WebView view, ReadableArray schemes) {
     ((PBWebView)view).setCustomSchemes(schemes.toArrayList());
+  }
+
+  @ReactProp(name = "contentInset")
+  public void setContentInset(WebView view, ReadableMap inset) {
+    Rect newInset = new Rect();
+    try {
+      newInset.top = inset.getInt("top");
+      newInset.left = inset.getInt("left");
+      newInset.right = inset.getInt("right");
+      newInset.bottom = inset.getInt("bottom");
+    } catch (Exception e) {
+    } finally {
+      ((PBWebView)view).setContentInset(newInset);
+    }
   }
 
   @Override
