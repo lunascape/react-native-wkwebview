@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
@@ -24,24 +23,22 @@ import java.util.regex.Pattern;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Picture;
-import android.graphics.Point;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
 import android.webkit.HttpAuthHandler;
@@ -54,7 +51,6 @@ import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -294,15 +290,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
    * Subclass of {@link WebView} that implements {@link LifecycleEventListener} interface in order
    * to call {@link WebView#destroy} on activty destroy event and also to clear the client
    */
-  protected static class PBWebView extends WebView implements LifecycleEventListener {
+  public static class PBWebView extends WebView implements LifecycleEventListener {
     private @Nullable String injectedJS;
     private boolean messagingEnabled = false;
     private ArrayList<Object> customSchemes = new ArrayList<>();
     private GeolocationPermissions.Callback _callback;
-
-    private Rect mContentInset;
-    private Rect mClipBounds = new Rect();
-    DisplayMetrics mDeviceMetrics;
 
     private class ReactWebViewBridge {
       PBWebView mContext;
@@ -326,9 +318,10 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
      */
     public PBWebView(ThemedReactContext reactContext) {
       super(reactContext);
+    }
 
-      mContentInset = new Rect();
-      mDeviceMetrics = this.getResources().getDisplayMetrics();
+    public PBWebView(Context context, AttributeSet attrs, int defStyleAttr) {
+      super(context, attrs, defStyleAttr);
     }
 
     @Override
@@ -470,82 +463,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       }
     }
 
-    public void setContentInset(Rect inset) {
-      this.mContentInset.top = (int)(inset.top * this.mDeviceMetrics.density);
-      this.mContentInset.left = (int)(inset.left * this.mDeviceMetrics.density);
-      this.mContentInset.right = (int)(inset.right * this.mDeviceMetrics.density);
-      this.mContentInset.bottom = (int)(inset.bottom * this.mDeviceMetrics.density);
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-
-      canvas.save();
-
-      if(this.mContentInset != null && this.mContentInset.top != 0) {
-        final int sy = getScrollY();
-        final int sx = getScrollX();
-        mClipBounds.top = sy;
-        mClipBounds.left = sx;
-        mClipBounds.right = mClipBounds.left + getWidth();
-        mClipBounds.bottom = mClipBounds.top + getHeight();
-        canvas.clipRect(mClipBounds);
-
-        // translate
-        int titleBarOffs = getVisibleTitleHeightCompat();
-        if(titleBarOffs < 0) titleBarOffs = 0;
-        canvas.translate(0, titleBarOffs);
-      }
-
-      super.onDraw(canvas);
-      canvas.restore();
-    }
-
-    @Override
-    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
-      WritableMap eventData = Arguments.createMap();
-      WritableMap data = Arguments.createMap();
-      data.putInt("x", (int)(l / this.mDeviceMetrics.density));
-      data.putInt("y", (int)(t / this.mDeviceMetrics.density));
-      data.putInt("lastX", (int)(oldl / this.mDeviceMetrics.density));
-      data.putInt("lastY", (int)(oldt / this.mDeviceMetrics.density));
-      eventData.putString("type", "onScroll");
-      eventData.putMap("data", data);
-
-      dispatchEvent(this, PBWebViewEvent.createMessageEvent(this.getId(), eventData));
-    }
-
-    @Override
-    protected int computeVerticalScrollExtent() {
-      if(this.mContentInset == null) return super.computeVerticalScrollExtent();
-      return getViewHeightWithTitle() - getVisibleTitleHeightCompat();
-    }
-
-    @Override
-    protected int computeVerticalScrollOffset() {
-      if(this.mContentInset == null) return super.computeVerticalScrollOffset();
-      return Math.max(getScrollY(), getTitleHeight());
-    }
-
-    @Override
-    protected int computeVerticalScrollRange() {
-      return getHeight() - getTitleHeight();
-    }
-
-    private int getTitleHeight() {
-      return this.mContentInset.top;
-    }
-
-    private int getViewHeightWithTitle() {
-      int height = getHeight();
-      if(isHorizontalScrollBarEnabled() && !overlayHorizontalScrollbar()) {
-        height -= getHorizontalScrollbarHeight();
-      }
-      return height;
-    }
-
-    protected int getVisibleTitleHeightCompat() {
-      return Math.max(getTitleHeight() - Math.max(0, getScrollY()), 0);
+    public void setupLayout() {
+      ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+      this.setLayoutParams(params);
     }
   }
 
@@ -565,12 +485,16 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     return REACT_CLASS;
   }
 
+  protected PBWebView createWebViewInstance(final ThemedReactContext reactContext) {
+    return new PBWebView(reactContext);
+  }
+
   @Override
   protected WebView createViewInstance(final ThemedReactContext reactContext) {
     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       WebView.enableSlowWholeDocumentDraw();
     }
-    final PBWebView webView = new PBWebView(reactContext);
+    final PBWebView webView = this.createWebViewInstance(reactContext);
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
@@ -646,9 +570,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 
     // Fixes broken full-screen modals/galleries due to body height being 0.
-    webView.setLayoutParams(
-            new LayoutParams(LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT));
+    webView.setupLayout();
 
     if (ReactBuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       WebView.setWebContentsDebuggingEnabled(true);
@@ -819,20 +741,6 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   @ReactProp(name = "customSchemes")
   public void setCustomSchemes(WebView view, ReadableArray schemes) {
     ((PBWebView)view).setCustomSchemes(schemes.toArrayList());
-  }
-
-  @ReactProp(name = "contentInset")
-  public void setContentInset(WebView view, ReadableMap inset) {
-    Rect newInset = new Rect();
-    try {
-      newInset.top = inset.getInt("top");
-      newInset.left = inset.getInt("left");
-      newInset.right = inset.getInt("right");
-      newInset.bottom = inset.getInt("bottom");
-    } catch (Exception e) {
-    } finally {
-      ((PBWebView)view).setContentInset(newInset);
-    }
   }
 
   @Override

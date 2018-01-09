@@ -28,7 +28,8 @@ public class PBWebViewPackage implements ReactPackage {
     public List<ViewManager> createViewManagers(
                               ReactApplicationContext reactContext) {
       return Arrays.<ViewManager>asList(
-        new PBWebViewManager()
+        new PBWebViewManager(),
+        new PBNestedWebViewManager()
       );
     }
 }
