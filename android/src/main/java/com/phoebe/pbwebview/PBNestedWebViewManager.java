@@ -17,6 +17,6 @@ public class PBNestedWebViewManager extends PBWebViewManager {
 
     @Override
     protected PBWebView createWebViewInstance(final ThemedReactContext reactContext) {
-        return new NestedWebView(reactContext);
+        return new PBNestedWebView(reactContext);
     }
 }
