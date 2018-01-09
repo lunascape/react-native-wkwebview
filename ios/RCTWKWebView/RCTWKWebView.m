@@ -514,18 +514,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   else {
     decisionHandler(WKNavigationActionPolicyAllow);
   }
-  
-  if (navigationAction.navigationType == WKNavigationTypeLinkActivated) {
-    // Skip scroll handler if user navigate to an anchor link
-    webView.scrollView.delegate = nil;
-    // Scrolling would be completed very soon
-    float timeout = 0.05;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      // Reactivate scroll handler manually as no event called in this case
-      lastOffset = webView.scrollView.contentOffset;
-      webView.scrollView.delegate = self;
-    });
-  }
 }
 
 - (BOOL)decisionHandlerURL:(NSURL *)url {
@@ -679,11 +667,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+  CGPoint offset = scrollView.contentOffset;
   if (!decelerating && !dragging) {
+    lastOffset = offset;
     return;
   }
   
-  CGPoint offset = scrollView.contentOffset;
   CGFloat dy = offset.y - lastOffset.y;
   CGSize frameSize = scrollView.frame.size;
   
