@@ -705,16 +705,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDrag", @"data":event}});
 }
 
-- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
-  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollBeginDecelerating", @"data":event}});
-}
-
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
   decelerating = NO;
-  
-  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDecelerating", @"data":event}});
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
