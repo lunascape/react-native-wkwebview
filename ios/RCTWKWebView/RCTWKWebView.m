@@ -153,15 +153,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 - (void)setAdjustOffset:(CGPoint)adjustOffset {
-  // Avoid scrollDidScroll get called
-  _webView.scrollView.delegate = nil;
-  _webView.scrollView.contentOffset = CGPointMake(0, _webView.scrollView.contentOffset.y + adjustOffset.y);
-  _webView.scrollView.delegate = self;
+  CGRect scrollBounds = _webView.scrollView.bounds;
+  scrollBounds.origin = CGPointMake(0, _webView.scrollView.contentOffset.y + adjustOffset.y);;
+  _webView.scrollView.bounds = scrollBounds;
   
-  // Notify to JS side new offset
   lastOffset = _webView.scrollView.contentOffset;
-  NSDictionary *event = [self onScrollEvent:lastOffset moveDistance:CGPointMake(0, 0)];
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDrag", @"data":event}});
 }
 
 -(void)setHideKeyboardAccessoryView:(BOOL)hideKeyboardAccessoryView
@@ -674,23 +670,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
   
   CGFloat dy = offset.y - lastOffset.y;
-  CGSize frameSize = scrollView.frame.size;
+  lastOffset = offset;
   
+  CGSize frameSize = scrollView.frame.size;
   CGFloat offsetMin = 0;
   CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
-  
-  BOOL shouldLock = !decelerating && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp && lastOffset.y == offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && lastOffset.y >= offsetMin));
-  
-  if (shouldLock) {
-    CGRect scrollBounds = scrollView.bounds;
-    scrollBounds.origin = lastOffset;
-    scrollView.bounds = scrollBounds;
-  } else {
-    lastOffset = offset;
-    if ((!decelerating && ((dy < 0 && _lockScroll == LockDirectionUp && offset.y >= offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && offset.y <= offsetMin))) ||
-        (decelerating && (offset.y <= offsetMin || offset.y >= offsetMax))) {
-      dy = 0;
-    }
+  if ((lastOffset.y <= offsetMin && dy > 0) || (lastOffset.y >= offsetMax && dy < 0)) {
+    return;
   }
   
   NSDictionary *event = [self onScrollEvent:offset moveDistance:CGPointMake(offset.x - lastOffset.x, dy)];
@@ -707,6 +693,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
   decelerating = NO;
+  
+  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
+  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDecelerating", @"data":event}});
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
