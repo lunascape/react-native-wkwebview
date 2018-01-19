@@ -153,9 +153,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 - (void)setAdjustOffset:(CGPoint)adjustOffset {
-  CGRect scrollBounds = _webView.scrollView.bounds;
-  scrollBounds.origin = CGPointMake(0, _webView.scrollView.contentOffset.y + adjustOffset.y);
-  _webView.scrollView.bounds = scrollBounds;
+  // Avoid scrollDidScroll get called
+  _webView.scrollView.delegate = nil;
+  _webView.scrollView.contentOffset = CGPointMake(0, _webView.scrollView.contentOffset.y + adjustOffset.y);
+  _webView.scrollView.delegate = self;
   
   // Notify to JS side new offset
   lastOffset = _webView.scrollView.contentOffset;
@@ -678,7 +679,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   CGFloat offsetMin = 0;
   CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
   
-  BOOL shouldLock = (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp && lastOffset.y == offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && lastOffset.y >= offsetMin));
+  BOOL shouldLock = !decelerating && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp && lastOffset.y == offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && lastOffset.y >= offsetMin));
   
   if (shouldLock) {
     CGRect scrollBounds = scrollView.bounds;
@@ -704,16 +705,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDrag", @"data":event}});
 }
 
-- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
-  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollBeginDecelerating", @"data":event}});
-}
-
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
   decelerating = NO;
-  
-  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDecelerating", @"data":event}});
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
