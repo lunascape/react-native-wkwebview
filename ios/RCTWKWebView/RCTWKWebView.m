@@ -253,14 +253,27 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     NSString *file = [RCTConvert NSString:source[@"file"]];
     NSString *allowingReadAccessToURL = [RCTConvert NSString:source[@"allowingReadAccessToURL"]];
     
-    if (file && [_webView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
-      NSURL *fileURL = [RCTConvert NSURL:file];
-      NSURL *baseURL = [RCTConvert NSURL:allowingReadAccessToURL];
-      [_webView loadFileURL:fileURL allowingReadAccessToURL:baseURL];
-      return;
-    } else if (file) {
-      NSURL *tempURL = [self fileURLForBuggyWKWebview8:[RCTConvert NSURL:file]];
-      [_webView loadRequest:[NSURLRequest requestWithURL:tempURL]];
+    if (file) {
+      if ([_webView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
+        NSURL *fileURL = [RCTConvert NSURL:file];
+        NSURL *baseURL = [RCTConvert NSURL:allowingReadAccessToURL];
+        NSString *htmlString = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:nil];
+        if (htmlString) {
+          NSString *host = [NSString stringWithContentsOfURL:[fileURL URLByAppendingPathExtension:@"meta"] encoding:NSUTF8StringEncoding error:nil];
+          NSURL *hostURL = nil;
+          if (!host) {
+            hostURL = [fileURL URLByDeletingLastPathComponent];
+          } else {
+            hostURL = [NSURL URLWithString:host];
+          }
+          [_webView loadHTMLString:htmlString baseURL:hostURL];
+        } else {
+          [_webView loadFileURL:fileURL allowingReadAccessToURL:baseURL];
+        }
+      } else {
+        NSURL *tempURL = [self fileURLForBuggyWKWebview8:[RCTConvert NSURL:file]];
+        [_webView loadRequest:[NSURLRequest requestWithURL:tempURL]];
+      }
       return;
     }
     
