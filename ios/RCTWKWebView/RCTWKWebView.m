@@ -255,7 +255,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     NSURL *baseURL = [RCTConvert NSURL:source[@"allowingReadAccessToURL"]];
     
     if (fileURL) {
-      if ([fileURL.absoluteString containsString:@"Bundle"]) {
+      BOOL isBundleFile = [fileURL.absoluteString containsString:@"Bundle"];
+      if (isBundleFile) {
         NSURL *searchURL = [self urlForFileName:fileURL.lastPathComponent];
         if (searchURL) {
           fileURL = searchURL;
@@ -263,7 +264,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       }
       if ([_webView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
         NSString *htmlString = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:nil];
-        if (htmlString) {
+        if (htmlString && !isBundleFile) {
           NSString *host = [NSString stringWithContentsOfURL:[fileURL URLByAppendingPathExtension:@"meta"] encoding:NSUTF8StringEncoding error:nil];
           NSURL *hostURL = nil;
           if (!host) {
@@ -273,7 +274,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
           }
           [_webView loadHTMLString:htmlString baseURL:hostURL];
         } else {
-          [_webView loadRequest:[NSURLRequest requestWithURL:fileURL]];
+          [_webView loadFileURL:fileURL allowingReadAccessToURL:[fileURL URLByDeletingLastPathComponent]];
         }
       } else {
         [_webView loadRequest:[NSURLRequest requestWithURL:fileURL]];
