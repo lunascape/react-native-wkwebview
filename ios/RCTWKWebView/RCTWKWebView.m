@@ -53,6 +53,7 @@
   CGPoint lastOffset;
   BOOL decelerating;
   BOOL dragging;
+  BOOL scrollingToTop;
   BOOL isDisplayingError;
 }
 
@@ -668,7 +669,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   
   NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(currentOffset.x),@"y": @(currentOffset.y)}}];
-  [event addEntriesFromDictionary:@{@"scroll": @{@"decelerating":@(decelerating), @"width": @(frameSize.width), @"height": @(frameSize.height)}}];
+  [event addEntriesFromDictionary:@{@"scroll": @{@"decelerating":@(decelerating || scrollingToTop), @"width": @(frameSize.width), @"height": @(frameSize.height)}}];
   [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
   
   [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(distance.x),@"dy": @(distance.y)}}];
@@ -677,7 +678,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
   CGPoint offset = scrollView.contentOffset;
-  if (!decelerating && !dragging) {
+  if (!decelerating && !dragging && !scrollingToTop) {
+    NSLog(@"scrollViewDidScroll dont fire event");
     lastOffset = offset;
     return;
   }
@@ -717,6 +719,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   
   NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollBeginDrag", @"data":event}});
+}
+
+- (BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView {
+  scrollingToTop = _webView.scrollView.scrollsToTop;
+  return _webView.scrollView.scrollsToTop;
+}
+
+- (void)scrollViewDidScrollToTop:(UIScrollView *)scrollView {
+  scrollingToTop = NO;
+  
+  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
+  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDecelerating", @"data":event}});
 }
 
 #pragma mark - WKUIDelegate
