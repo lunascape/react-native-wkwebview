@@ -199,7 +199,6 @@ class WebView extends React.Component {
       'always',
       'compatibility'
     ]),
-    nestedScroll: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -216,14 +215,6 @@ class WebView extends React.Component {
   componentWillMount() {
     if (this.props.startInLoadingState) {
       this.setState({viewState: WebViewState.LOADING});
-    }
-  }
-
-  setNativeProps(nativeProps) {
-    try {
-      this.refs[RCT_WEBVIEW_REF].setNativeProps(nativeProps);
-    } catch (err) {
-      console.log(err);
     }
   }
 
@@ -262,10 +253,8 @@ class WebView extends React.Component {
       console.warn('WebView: `source.body` is not supported when using GET.');
     }
 
-    const WebViewClass = this.props.nestedScroll ? PBNestedWebView : PBWebView;
-
     var webView =
-      <WebViewClass
+      <PBWebView
         ref={RCT_WEBVIEW_REF}
         key="webViewKey"
         style={webViewStyles}
@@ -449,12 +438,6 @@ class WebView extends React.Component {
 }
 
 var PBWebView = requireNativeComponent('PBWebView', WebView, {
-  nativeOnly: {
-    messagingEnabled: PropTypes.bool,
-  },
-});
-
-var PBNestedWebView = requireNativeComponent('PBNestedWebView', WebView, {
   nativeOnly: {
     messagingEnabled: PropTypes.bool,
   },

@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -35,10 +34,10 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
 import android.webkit.HttpAuthHandler;
@@ -290,7 +289,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
    * Subclass of {@link WebView} that implements {@link LifecycleEventListener} interface in order
    * to call {@link WebView#destroy} on activty destroy event and also to clear the client
    */
-  public static class PBWebView extends WebView implements LifecycleEventListener {
+  protected static class PBWebView extends WebView implements LifecycleEventListener {
     private @Nullable String injectedJS;
     private boolean messagingEnabled = false;
     private ArrayList<Object> customSchemes = new ArrayList<>();
@@ -318,10 +317,6 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
      */
     public PBWebView(ThemedReactContext reactContext) {
       super(reactContext);
-    }
-
-    public PBWebView(Context context, AttributeSet attrs, int defStyleAttr) {
-      super(context, attrs, defStyleAttr);
     }
 
     @Override
@@ -462,11 +457,6 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         this.setGeolocationPermissionCallback(null);
       }
     }
-
-    public void setupLayout() {
-      ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-      this.setLayoutParams(params);
-    }
   }
 
   public PBWebViewManager() {
@@ -485,16 +475,12 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     return REACT_CLASS;
   }
 
-  protected PBWebView createWebViewInstance(final ThemedReactContext reactContext) {
-    return new PBWebView(reactContext);
-  }
-
   @Override
   protected WebView createViewInstance(final ThemedReactContext reactContext) {
     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       WebView.enableSlowWholeDocumentDraw();
     }
-    final PBWebView webView = this.createWebViewInstance(reactContext);
+    final PBWebView webView = new PBWebView(reactContext);
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
@@ -570,7 +556,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 
     // Fixes broken full-screen modals/galleries due to body height being 0.
-    webView.setupLayout();
+    webView.setLayoutParams(
+            new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
 
     if (ReactBuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       WebView.setWebContentsDebuggingEnabled(true);
