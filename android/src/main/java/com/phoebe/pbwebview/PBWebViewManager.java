@@ -533,7 +533,10 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             event.putBoolean("canGoBack", webView.canGoBack());
             event.putBoolean("canGoForward", webView.canGoForward());
             dispatchEvent(webView, PBWebViewEvent.createNewWindowEvent(webView.getId(), event));
-            webView.removeView(newView);
+            try {
+              webView.removeView(newView);
+              newView.destroy();
+            } catch (Exception e) {}
           }
         });
         // Create dynamically a new view
