@@ -21,19 +21,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Picture;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -54,7 +55,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.common.ReactConstants;
@@ -124,6 +124,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   public static final int COMMAND_INJECT_JAVASCRIPT = 6;
   public static final int CAPTURE_SCREEN = 7;
   public static final int COMMAND_SEARCH_IN_PAGE = 8;
+  public static final int SET_GEOLOCATION_PERMISSION = 9;
 
   public static final String DOWNLOAD_DIRECTORY = Environment.getExternalStorageDirectory() + "/Android/data/jp.co.lunascape.android.ilunascape/downloads/";
 
@@ -172,9 +173,24 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
           ArrayList<Object> customSchemes = webView.getCustomSchemes();
           try {
             Uri uri = Uri.parse(url);
+            // Checking supported scheme only
             if (customSchemes != null && customSchemes.contains(uri.getScheme())) {
               webView.shouldStartLoadWithRequest(url);
               return true;
+            } else if (uri.getScheme().equalsIgnoreCase("intent")) {
+              // Get payload and scheme the intent wants to open
+              Pattern pattern = Pattern.compile("^intent://(\\S*)#Intent;.*scheme=([a-zA-Z]+)");
+              Matcher matcher = pattern.matcher(url);
+              if (matcher.find()) {
+                String payload = matcher.group(1);
+                String scheme = matcher.group(2);
+                // Checking supported scheme only
+                if (customSchemes != null && customSchemes.contains(scheme)) {
+                  String convertedUrl = scheme + "://" + payload;
+                  webView.shouldStartLoadWithRequest(convertedUrl);
+                  return true;
+                }
+              }
             }
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -281,6 +297,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     private @Nullable String injectedJS;
     private boolean messagingEnabled = false;
     private ArrayList<Object> customSchemes = new ArrayList<>();
+    private GeolocationPermissions.Callback _callback;
 
     private class ReactWebViewBridge {
       PBWebView mContext;
@@ -460,6 +477,17 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         e.printStackTrace();
       }
     }
+
+    public void setGeolocationPermissionCallback(GeolocationPermissions.Callback callback) {
+      this._callback = callback;
+    }
+
+    public void setGeolocationPermission(String origin, boolean allow) {
+      if (this._callback != null) {
+        this._callback.invoke(origin, allow, false);
+        this.setGeolocationPermissionCallback(null);
+      }
+    }
   }
 
   public PBWebViewManager() {
@@ -483,7 +511,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       WebView.enableSlowWholeDocumentDraw();
     }
-    PBWebView webView = new PBWebView(reactContext);
+    final PBWebView webView = new PBWebView(reactContext);
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
@@ -495,8 +523,32 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       }
 
       @Override
-      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-        callback.invoke(origin, true, false);
+      public void onGeolocationPermissionsShowPrompt(final String origin, final GeolocationPermissions.Callback callback) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+          final boolean remember = false;
+          AlertDialog.Builder builder = new AlertDialog.Builder(webView.getContext());
+          builder.setTitle(webView.getContext().getResources().getString(R.string.locations));
+          builder.setMessage(webView.getContext().getResources().getString(R.string.locations_ask_permission))
+                  .setCancelable(true).setPositiveButton(webView.getContext().getResources().getString(R.string.allow), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+              // origin, allow, remember
+              callback.invoke(origin, true, remember);
+            }
+          }).setNegativeButton(webView.getContext().getResources().getString(R.string.dont_allow), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+              // origin, allow, remember
+              callback.invoke(origin, false, remember);
+            }
+          });
+          AlertDialog alert = builder.create();
+          alert.show();
+        } else {
+          webView.setGeolocationPermissionCallback(callback);
+          WritableMap event = Arguments.createMap();
+          event.putDouble("target", webView.getId());
+          event.putString("origin", origin);
+          dispatchEvent(webView, PBWebViewEvent.createLocationAskPermissionEvent(webView.getId(), event));
+        }
       }
       @Override
       public boolean onCreateWindow(final WebView webView, boolean isDialog, boolean isUserGesture, Message resultMsg) {
@@ -512,7 +564,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             event.putBoolean("canGoBack", webView.canGoBack());
             event.putBoolean("canGoForward", webView.canGoForward());
             dispatchEvent(webView, PBWebViewEvent.createNewWindowEvent(webView.getId(), event));
-            newView.destroy();
+            webView.removeView(newView);
           }
         });
         // Create dynamically a new view
@@ -550,7 +602,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         HitTestResult result = webView.getHitTestResult();
         final String extra = result.getExtra();
         final int type = result.getType();
-        if (type == HitTestResult.SRC_IMAGE_ANCHOR_TYPE || type == HitTestResult.SRC_ANCHOR_TYPE || type == HitTestResult.IMAGE_TYPE) {
+        if (type == HitTestResult.SRC_IMAGE_ANCHOR_TYPE || type == HitTestResult.SRC_ANCHOR_TYPE || type == HitTestResult.IMAGE_TYPE || type == HitTestResult.UNKNOWN_TYPE) {
           Handler handler = new Handler(webView.getHandler().getLooper()) {
             @Override
             public void handleMessage(Message msg) {
@@ -562,7 +614,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
                 if (type == HitTestResult.SRC_ANCHOR_TYPE) {
                   image_url = "";
                 }
-                webView.onMessage(String.format("{\"url\":\"%s\",\"image_url\":\"%s\"}", url, image_url));
+                WritableMap data = Arguments.createMap();
+                data.putString("type", "contextmenu");
+                data.putString("url", url);
+                data.putString("image_url", image_url);
+                dispatchEvent(webView, PBWebViewEvent.createMessageEvent(webView.getId(), data));
               }
             }
           };
@@ -724,6 +780,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         "captureScreen", CAPTURE_SCREEN
     );
     map.put("findInPage", COMMAND_SEARCH_IN_PAGE);
+    map.put("setGeolocationPermission", SET_GEOLOCATION_PERMISSION);
     return map;
   }
 
@@ -771,6 +828,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       case COMMAND_SEARCH_IN_PAGE:
         ((PBWebView) root).searchInPage(args.getString(0));
         break;
+      case SET_GEOLOCATION_PERMISSION:
+        if (args.size() == 2) {
+          ((PBWebView) root).setGeolocationPermission(args.getString(0), args.getBoolean(1));
+        }
+        break;
     }
   }
 
@@ -808,9 +870,11 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
   @Override
   public @Nullable Map getExportedCustomDirectEventTypeConstants() {
     return MapBuilder.of(
-      "createWindow", MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
-      "shouldStartRequest", MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"),
-      "captureScreen", MapBuilder.of("registrationName", "onCaptureScreen")
+      PBWebViewEvent.CREATE_WINDOW_EVENT_NAME, MapBuilder.of("registrationName", "onShouldCreateNewWindow"),
+      PBWebViewEvent.SHOULD_START_REQUEST_EVENT_NAME, MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"),
+      PBWebViewEvent.CAPTURE_SCREEN_EVENT_NAME, MapBuilder.of("registrationName", "onCaptureScreen"),
+      PBWebViewEvent.ASK_LOCATION_PERMISSION_EVENT_NAME, MapBuilder.of("registrationName", "onLocationAskPermission"),
+      PBWebViewEvent.ON_MESSAGE_EVENT_NAME, MapBuilder.of("registrationName", "onLsMessage")
     );
   }
 }

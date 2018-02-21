@@ -62,6 +62,7 @@ class WebView extends React.Component {
     contentInset: EdgeInsetsPropType,
     onNavigationStateChange: PropTypes.func,
     onMessage: PropTypes.func,
+    onLsMessage: PropTypes.func,
     onContentSizeChange: PropTypes.func,
     startInLoadingState: PropTypes.bool, // force WebView to show loadingView on first load
     style: ViewPropTypes.style,
@@ -265,7 +266,7 @@ class WebView extends React.Component {
         javaScriptEnabled={this.props.javaScriptEnabled}
         domStorageEnabled={this.props.domStorageEnabled}
         messagingEnabled={typeof this.props.onMessage === 'function'}
-        onMessage={this.onMessage}
+        onLsMessage={this.onMessage}
         contentInset={this.props.contentInset}
         automaticallyAdjustContentInsets={this.props.automaticallyAdjustContentInsets}
         onContentSizeChange={this.props.onContentSizeChange}
@@ -279,6 +280,7 @@ class WebView extends React.Component {
         onShouldStartLoadWithRequest={this.onShouldStartLoadWithRequest}
         mixedContentMode={this.props.mixedContentMode}
         onCaptureScreen={this.onCaptureScreen}
+        onLocationAskPermission={this.onLocationAskPermission}
       />;
 
     return (
@@ -335,6 +337,14 @@ class WebView extends React.Component {
     );
   };
 
+  setGeolocationPermission = (origin, allow) => {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.PBWebView.Commands.setGeolocationPermission,
+      [String(origin), Boolean(allow)]
+    );
+  };
+
   stopLoading = () => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),
@@ -387,6 +397,12 @@ class WebView extends React.Component {
     }
   };
 
+  onLocationAskPermission = (event) => {
+    if (this.props.onLocationAskPermission) {
+      this.props.onLocationAskPermission(event.nativeEvent);
+    }
+  }
+
   onShouldStartLoadWithRequest = (event) => {
     if (this.props.onShouldStartLoadWithRequest) {
       this.props.onShouldStartLoadWithRequest(event.nativeEvent);
@@ -427,8 +443,8 @@ class WebView extends React.Component {
   };
 
   onMessage = (event: Event) => {
-    var {onMessage} = this.props;
-    onMessage && onMessage(event);
+    var {onLsMessage} = this.props;
+    onLsMessage && onLsMessage(event);
   }
 }
 

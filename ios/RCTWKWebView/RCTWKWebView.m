@@ -35,6 +35,7 @@
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingStart;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingFinish;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingError;
+@property (nonatomic, copy) RCTDirectEventBlock onNavigationStateChange;
 @property (nonatomic, copy) RCTDirectEventBlock onShouldStartLoadWithRequest;
 @property (nonatomic, copy) RCTDirectEventBlock onShouldCreateNewWindow;
 @property (nonatomic, copy) RCTDirectEventBlock onProgress;
@@ -52,6 +53,7 @@
   CGPoint lastOffset;
   BOOL decelerating;
   BOOL dragging;
+  BOOL scrollingToTop;
   BOOL isDisplayingError;
 }
 
@@ -89,6 +91,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _webView.scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
     lastOffset = _webView.scrollView.contentOffset;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"title" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"loading" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"canGoBack" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"canGoForward" options:NSKeyValueObservingOptionNew context:nil];
+    [_webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:nil];
     [self addSubview:_webView];
     
     UILongPressGestureRecognizer* longGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressed:)];
@@ -147,15 +154,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 - (void)setAdjustOffset:(CGPoint)adjustOffset {
-  // Avoid scrollDidScroll get called
-  _webView.scrollView.delegate = nil;
-  _webView.scrollView.contentOffset = CGPointMake(0, _webView.scrollView.contentOffset.y + adjustOffset.y);
-  _webView.scrollView.delegate = self;
+  CGRect scrollBounds = _webView.scrollView.bounds;
+  scrollBounds.origin = CGPointMake(0, _webView.scrollView.contentOffset.y + adjustOffset.y);;
+  _webView.scrollView.bounds = scrollBounds;
   
-  // Notify to JS side new offset
   lastOffset = _webView.scrollView.contentOffset;
-  NSDictionary *event = [self onScrollEvent:lastOffset moveDistance:CGPointMake(0, 0)];
-  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDrag", @"data":event}});
 }
 
 -(void)setHideKeyboardAccessoryView:(BOOL)hideKeyboardAccessoryView
@@ -232,26 +235,46 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)setSource:(NSDictionary *)source
 {
   if (![_source isEqualToDictionary:source]) {
+    NSString *customAgent = source[@"customUserAgent"];
+    NSString *oldAgent = _source[@"customUserAgent"];
     _source = [source copy];
     _sendCookies = [source[@"sendCookies"] boolValue];
-    if ([source[@"customUserAgent"] length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
+    if ([customAgent length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
       [_webView setCustomUserAgent:source[@"customUserAgent"]];
+    } else {
+      [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": customAgent}];
+      [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    
+    if (![customAgent isEqualToString:oldAgent] && oldAgent) {
+      return;
+    }
     // Allow loading local files:
     // <WKWebView source={{ file: RNFS.MainBundlePath + '/data/index.html', allowingReadAccessToURL: RNFS.MainBundlePath }} />
     // Only works for iOS 9+. So iOS 8 will simply ignore those two values
     NSString *file = [RCTConvert NSString:source[@"file"]];
     NSString *allowingReadAccessToURL = [RCTConvert NSString:source[@"allowingReadAccessToURL"]];
     
-    if (file && [_webView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
-      NSURL *fileURL = [RCTConvert NSURL:file];
-      NSURL *baseURL = [RCTConvert NSURL:allowingReadAccessToURL];
-      [_webView loadFileURL:fileURL allowingReadAccessToURL:baseURL];
-      return;
-    } else if (file) {
-      NSURL *tempURL = [self fileURLForBuggyWKWebview8:[RCTConvert NSURL:file]];
-      [_webView loadRequest:[NSURLRequest requestWithURL:tempURL]];
+    if (file) {
+      if ([_webView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
+        NSURL *fileURL = [RCTConvert NSURL:file];
+        NSURL *baseURL = [RCTConvert NSURL:allowingReadAccessToURL];
+        NSString *htmlString = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:nil];
+        if (htmlString) {
+          NSString *host = [NSString stringWithContentsOfURL:[fileURL URLByAppendingPathExtension:@"meta"] encoding:NSUTF8StringEncoding error:nil];
+          NSURL *hostURL = nil;
+          if (!host) {
+            hostURL = [fileURL URLByDeletingLastPathComponent];
+          } else {
+            hostURL = [NSURL URLWithString:host];
+          }
+          [_webView loadHTMLString:htmlString baseURL:hostURL];
+        } else {
+          [_webView loadFileURL:fileURL allowingReadAccessToURL:baseURL];
+        }
+      } else {
+        NSURL *tempURL = [self fileURLForBuggyWKWebview8:[RCTConvert NSURL:file]];
+        [_webView loadRequest:[NSURLRequest requestWithURL:tempURL]];
+      }
       return;
     }
     
@@ -278,6 +301,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     if (!request.URL) {
       // Clear the webview
       [_webView loadHTMLString:@"" baseURL:nil];
+      return;
+    }
+    if ([self decisionHandlerURL:request.URL]) {
       return;
     }
     [self loadRequest:request];
@@ -397,6 +423,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       return;
     }
     _onProgress(@{@"progress": [change objectForKey:NSKeyValueChangeNewKey]});
+  } else if ([keyPath isEqualToString:@"title"] || [keyPath isEqualToString:@"loading"] || [keyPath isEqualToString:@"canGoBack"] || [keyPath isEqualToString:@"canGoForward"] || [keyPath isEqualToString:@"URL"]) {
+    if (_onNavigationStateChange) {
+      _onNavigationStateChange([self baseEvent]);
+    }
   }
 }
 
@@ -404,6 +434,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 {
   @try {
     [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
+    [_webView removeObserver:self forKeyPath:@"title"];
+    [_webView removeObserver:self forKeyPath:@"loading"];
+    [_webView removeObserver:self forKeyPath:@"canGoBack"];
+    [_webView removeObserver:self forKeyPath:@"canGoForward"];
+    [_webView removeObserver:self forKeyPath:@"URL"];
     _webView.UIDelegate = nil;
     _webView.scrollView.delegate = nil;
     _webView.navigationDelegate = nil;
@@ -439,6 +474,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSURLRequest *request = navigationAction.request;
   NSURL* url = request.URL;
   NSString* scheme = url.scheme;
+  
+  if ([self decisionHandlerURL:url]) {
+    return decisionHandler(WKNavigationActionPolicyCancel);
+  }
   
   BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
   
@@ -487,28 +526,63 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
+- (BOOL)decisionHandlerURL:(NSURL *)url {
+  if (([url.scheme isEqualToString:@"https"] || [url.scheme isEqualToString:@"http"]) && [url.host isEqualToString:@"itunes.apple.com"]) {
+    NSString *newURLString = [url.absoluteString stringByReplacingOccurrencesOfString:url.scheme withString:@"itms-appss"];
+    NSURL *newURL = [NSURL URLWithString:newURLString];
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(openURL:options:completionHandler:)]) {
+      [[UIApplication sharedApplication] openURL:newURL options:@{} completionHandler:^(BOOL success) {
+        if (success) {
+          if (_onLoadingFinish) {
+            _onLoadingFinish([self baseEvent]);
+          }
+          NSLog(@"Launching %@ was successfull", url);
+        }
+      }];
+    } else {
+      [[UIApplication sharedApplication] openURL:newURL];
+    }
+    return YES;
+  }
+  return NO;
+}
+
 - (void)webView:(__unused WKWebView *)webView didFailProvisionalNavigation:(__unused WKNavigation *)navigation withError:(NSError *)error
 {
+  if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
+    // NSURLErrorCancelled is reported when a page has a redirect OR if you load
+    // a new URL in the WebView before the previous one came back. We can just
+    // ignore these since they aren't real errors.
+    // http://stackoverflow.com/questions/1024748/how-do-i-fix-nsurlerrordomain-error-999-in-iphone-3-0-os
+    return;
+  }
   //  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
-  if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey]) {
-    NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
-    BOOL applicationCanOpen = [[UIApplication sharedApplication] canOpenURL:url];
-    if (applicationCanOpen) {
+  NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
+  BOOL shouldOpenDeeplink = !url || [url.scheme isEqualToString:@"https"] || [url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"ftp"];
+  if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey] && !shouldOpenDeeplink) {
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(openURL:options:completionHandler:)]) {
+      [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
+        if (success) {
+          if (_onLoadingFinish) {
+            _onLoadingFinish([self baseEvent]);
+          }
+        } else {
+          [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
+        }
+      }];
+    } else {
       [[UIApplication sharedApplication] openURL:url];
       if (_onLoadingFinish) {
         _onLoadingFinish([self baseEvent]);
       }
-      return;
     }
+  } else {
+    [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
   }
+}
+
+- (void)sendError:(NSError *)error forURLString:(NSString *)url {
   if (_onLoadingError) {
-    if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
-      // NSURLErrorCancelled is reported when a page has a redirect OR if you load
-      // a new URL in the WebView before the previous one came back. We can just
-      // ignore these since they aren't real errors.
-      // http://stackoverflow.com/questions/1024748/how-do-i-fix-nsurlerrordomain-error-999-in-iphone-3-0-os
-      return;
-    }
     isDisplayingError = YES;
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
     [event addEntriesFromDictionary:@{
@@ -516,7 +590,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
                                       @"code": @(error.code),
                                       @"description": error.localizedDescription,
                                       }];
-    NSString *url = error.userInfo[NSURLErrorFailingURLStringErrorKey];
     NSDictionary *errorInfo = event.copy;
     [event setValue:errorInfo forKey:@"error"];
     [event setValue:url forKey:@"url"];
@@ -596,7 +669,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   
   NSMutableDictionary<NSString *, id> *event = [self baseEvent];
   [event addEntriesFromDictionary:@{@"contentOffset": @{@"x": @(currentOffset.x),@"y": @(currentOffset.y)}}];
-  [event addEntriesFromDictionary:@{@"scroll": @{@"decelerating":@(decelerating), @"width": @(frameSize.width), @"height": @(frameSize.height)}}];
+  [event addEntriesFromDictionary:@{@"scroll": @{@"decelerating":@(decelerating || scrollingToTop), @"width": @(frameSize.width), @"height": @(frameSize.height)}}];
   [event addEntriesFromDictionary:@{@"contentSize": @{@"width" : @(scrollView.contentSize.width), @"height": @(scrollView.contentSize.height)}}];
   
   [event addEntriesFromDictionary:@{@"offset": @{@"dx": @(distance.x),@"dy": @(distance.y)}}];
@@ -604,29 +677,21 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-  if (!decelerating && !dragging) {
+  CGPoint offset = scrollView.contentOffset;
+  if (!decelerating && !dragging && !scrollingToTop) {
+    NSLog(@"scrollViewDidScroll dont fire event");
+    lastOffset = offset;
     return;
   }
   
-  CGPoint offset = scrollView.contentOffset;
   CGFloat dy = offset.y - lastOffset.y;
-  CGSize frameSize = scrollView.frame.size;
+  lastOffset = offset;
   
+  CGSize frameSize = scrollView.frame.size;
   CGFloat offsetMin = 0;
   CGFloat offsetMax = scrollView.contentSize.height - frameSize.height;
-  
-  BOOL shouldLock = !decelerating && (_lockScroll == LockDirectionBoth || (dy < 0 && _lockScroll == LockDirectionUp && lastOffset.y == offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && lastOffset.y >= offsetMin));
-  
-  if (shouldLock) {
-    CGRect scrollBounds = scrollView.bounds;
-    scrollBounds.origin = lastOffset;
-    scrollView.bounds = scrollBounds;
-  } else {
-    lastOffset = offset;
-    if ((!decelerating && ((dy < 0 && _lockScroll == LockDirectionUp && offset.y >= offsetMin) || (dy > 0 && _lockScroll == LockDirectionDown && offset.y <= offsetMin))) ||
-        (decelerating && (offset.y <= offsetMin || offset.y >= offsetMax))) {
-      dy = 0;
-    }
+  if ((lastOffset.y <= offsetMin && dy > 0) || (lastOffset.y >= offsetMax && dy < 0)) {
+    return;
   }
   
   NSDictionary *event = [self onScrollEvent:offset moveDistance:CGPointMake(offset.x - lastOffset.x, dy)];
@@ -643,6 +708,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
   decelerating = NO;
+  
+  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
+  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDecelerating", @"data":event}});
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
@@ -651,6 +719,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   
   NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollBeginDrag", @"data":event}});
+}
+
+- (BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView {
+  scrollingToTop = _webView.scrollView.scrollsToTop;
+  return _webView.scrollView.scrollsToTop;
+}
+
+- (void)scrollViewDidScrollToTop:(UIScrollView *)scrollView {
+  scrollingToTop = NO;
+  
+  NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
+  _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDecelerating", @"data":event}});
 }
 
 #pragma mark - WKUIDelegate
@@ -723,5 +803,4 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 #pragma mark - Custom methods for custom context menu
 
 @end
-
 
