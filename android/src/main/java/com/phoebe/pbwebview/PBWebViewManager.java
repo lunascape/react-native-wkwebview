@@ -464,6 +464,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         String jsString = new String(readBytes);
 
         StringBuilder sb = new StringBuilder();
+        sb.append("MyApp_RemoveAllHighlights();");
         for (int i = 0; i < words.length; i++) {
           String color = i < highlightColors.length ? highlightColors[i] : highlightColors[highlightColors.length - 1];
           sb.append("MyApp_HighlightAllOccurencesOfString('" + words[i] + "','" + color + "');");
