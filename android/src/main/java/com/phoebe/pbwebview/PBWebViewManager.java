@@ -571,7 +571,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         HitTestResult result = webView.getHitTestResult();
         final String extra = result.getExtra();
         final int type = result.getType();
-        if (type == HitTestResult.SRC_IMAGE_ANCHOR_TYPE || type == HitTestResult.SRC_ANCHOR_TYPE || type == HitTestResult.IMAGE_TYPE) {
+        if (type == HitTestResult.SRC_IMAGE_ANCHOR_TYPE || type == HitTestResult.SRC_ANCHOR_TYPE || type == HitTestResult.IMAGE_TYPE || type == HitTestResult.UNKNOWN_TYPE) {
           Handler handler = new Handler(webView.getHandler().getLooper()) {
             @Override
             public void handleMessage(Message msg) {
