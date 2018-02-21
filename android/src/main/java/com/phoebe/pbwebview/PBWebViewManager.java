@@ -536,7 +536,10 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             try {
               webView.removeView(newView);
               newView.destroy();
-            } catch (Exception e) {}
+            } catch (Exception e) {
+              // Exception if occurs here only means that newView was removed.
+              // No need to do anything in this case
+            }
           }
         });
         // Create dynamically a new view
