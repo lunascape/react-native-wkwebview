@@ -289,8 +289,9 @@ var WKWebView = createReactClass({
       WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
     });
 
+    var source = this.props.source || {};
     if (this.props.source && typeof this.props.source == 'object') {
-      var source = Object.assign({}, this.props.source, {
+      source = Object.assign({}, this.props.source, {
         sendCookies: this.props.sendCookies,
         customUserAgent: this.props.customUserAgent || this.props.userAgent
       });
