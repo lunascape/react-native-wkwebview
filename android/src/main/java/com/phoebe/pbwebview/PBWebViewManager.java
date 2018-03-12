@@ -227,12 +227,6 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     @Override
     public void doUpdateVisitedHistory(WebView webView, String url, boolean isReload) {
       super.doUpdateVisitedHistory(webView, url, isReload);
-
-      dispatchEvent(
-          webView,
-          new TopLoadingStartEvent(
-              webView.getId(),
-              createWebViewEvent(webView, url)));
     }
 
     private void emitFinishEvent(WebView webView, String url) {
