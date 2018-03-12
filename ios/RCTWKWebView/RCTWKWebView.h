@@ -56,4 +56,6 @@ typedef enum {
 - (void)capturePage:(RCTResponseSenderBlock)callback;
 - (void)printContent;
 
+- (NSInteger)getUuid;
+
 @end

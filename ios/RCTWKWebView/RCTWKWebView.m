@@ -55,6 +55,7 @@
   BOOL dragging;
   BOOL scrollingToTop;
   BOOL isDisplayingError;
+  NSInteger uuid;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -69,6 +70,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   if(self = [self initWithFrame:CGRectZero])
   {
     super.backgroundColor = [UIColor clearColor];
+    uuid = arc4random();
     
     NSString* bundlePath = [[NSBundle mainBundle] pathForResource:@"Scripts" ofType:@"bundle"];
     resourceBundle = [NSBundle bundleWithPath:bundlePath];
@@ -800,7 +802,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   return nil;
 }
 
-#pragma mark - Custom methods for custom context menu
+- (NSInteger)getUuid {
+  return uuid;
+}
 
 @end
 
