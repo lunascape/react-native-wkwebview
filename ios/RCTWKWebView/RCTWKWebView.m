@@ -241,7 +241,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _sendCookies = [source[@"sendCookies"] boolValue];
     if ([customAgent length] != 0 && [_webView respondsToSelector:@selector(setCustomUserAgent:)]) {
       [_webView setCustomUserAgent:source[@"customUserAgent"]];
-    } else {
+    } else if (customAgent) {
       [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": customAgent}];
       [[NSUserDefaults standardUserDefaults] synchronize];
     }
