@@ -1,7 +1,7 @@
 var MyApp_SearchResultCount = 0;
 
 function MyApp_HighlightAllOccurencesOfStringForElement(element, keyword, color, doc) {
-  // Using try catch block to avoid error when trying to access contentDocument
+  /* Using try catch block to avoid error when trying to access contentDocument */
   try {
     if (element) {
       if (element.nodeType == 3) {
@@ -52,7 +52,7 @@ function MyApp_ScrollToHighlightTop() {
 }
 
 function MyApp_RemoveAllHighlightsForElement(element) {
-  // Using try catch block to avoid error when trying to access contentDocument
+  /* Using try catch block to avoid error when trying to access contentDocument */
   try {
     if (element) {
       if ((element.nodeType == 1) && (element.tagName.toLowerCase() == "iframe") && (element.contentDocument != null)) {
