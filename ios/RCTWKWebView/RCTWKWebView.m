@@ -248,32 +248,121 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     if (![customAgent isEqualToString:oldAgent] && oldAgent) {
       return;
     }
+//  **Old change** //I am keeping the old changes for testing purpose. Will delete those after QA
+
+//     NSString *file = [RCTConvert NSString:source[@"file"]];
+//     NSString *allowingReadAccessToURL = [RCTConvert NSString:source[@"allowingReadAccessToURL"]];
+    
+//     if (file) {
+//       if ([_webView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
+//         NSURL *fileURL = [RCTConvert NSURL:file];
+//         NSURL *baseURL = [RCTConvert NSURL:allowingReadAccessToURL];
+//         NSString *htmlString = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:nil];
+//         if (htmlString) {
+//           NSString *host = [NSString stringWithContentsOfURL:[fileURL URLByAppendingPathExtension:@"meta"] encoding:NSUTF8StringEncoding error:nil];
+//           NSURL *hostURL = nil;
+//           if (!host) {
+//             hostURL = [fileURL URLByDeletingLastPathComponent];
+//           } else {
+//             hostURL = [NSURL URLWithString:host];
+//           }
+//           [_webView loadHTMLString:htmlString baseURL:hostURL];
+//         } else {
+//           [_webView loadFileURL:fileURL allowingReadAccessToURL:baseURL];
+//         }
+//       } else {
+//         NSURL *tempURL = [self fileURLForBuggyWKWebview8:[RCTConvert NSURL:file]];
+//         [_webView loadRequest:[NSURLRequest requestWithURL:tempURL]];
+//       }
+//       return;
+//     }
+    
+//     // Check for a static html source first
+//     NSString *html = [RCTConvert NSString:source[@"html"]];
+//     if (html) {
+//       NSURL *baseURL = [RCTConvert NSURL:source[@"baseUrl"]];
+//       if (!baseURL) {
+//         baseURL = [NSURL URLWithString:@"about:blank"];
+//       }
+//       [_webView loadHTMLString:html baseURL:baseURL];
+//       return;
+//     }
+    
+//     NSURLRequest *request = [RCTConvert NSURLRequest:source];
+//     // Because of the way React works, as pages redirect, we actually end up
+//     // passing the redirect urls back here, so we ignore them if trying to load
+//     // the same url. We'll expose a call to 'reload' to allow a user to load
+//     // the existing page.
+//     // The page will load again when it comeback from error page.
+//     if ([request.URL isEqual:_webView.URL] && !isDisplayingError) {
+//       return;
+//     }
+//     if (!request.URL) {
+//       // Clear the webview
+//       [_webView loadHTMLString:@"" baseURL:nil];
+//       return;
+//     }
+//     if ([self decisionHandlerURL:request.URL]) {
+//       return;
+//     }
+//     [self loadRequest:request];
+//   }
+// }
+
+// - (NSURL *)fileURLForBuggyWKWebview8:(NSURL *)fileURL {
+//   if (!fileURL.isFileURL) {
+//     return fileURL;
+//   }
+//   NSError *error = nil;
+//   [fileURL checkResourceIsReachableAndReturnError:&error];
+//   if (error) {
+//     return nil;
+//   }
+//   NSFileManager *fileManager = [NSFileManager defaultManager];
+//   NSURL *tempDir = [[[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"www"] URLByAppendingPathComponent:@"files"];
+//   [fileManager createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:nil];
+//   NSURL *destURL = [tempDir URLByAppendingPathComponent:fileURL.lastPathComponent];
+//   [fileManager removeItemAtURL:destURL error:nil];
+//   [fileManager copyItemAtURL:fileURL toURL:destURL error:&error];
+//   if (!error) {
+//     return destURL;
+//   }
+//   return nil;
+// }
+
+
+/* **New Changes** */ 
+
+
     // Allow loading local files:
     // <WKWebView source={{ file: RNFS.MainBundlePath + '/data/index.html', allowingReadAccessToURL: RNFS.MainBundlePath }} />
     // Only works for iOS 9+. So iOS 8 will simply ignore those two values
-    NSString *file = [RCTConvert NSString:source[@"file"]];
-    NSString *allowingReadAccessToURL = [RCTConvert NSString:source[@"allowingReadAccessToURL"]];
-    
-    if (file) {
+    NSURL *fileURL = [RCTConvert NSURL:source[@"file"]];
+    NSURL *baseURL = [RCTConvert NSURL:source[@"allowingReadAccessToURL"]];
+    if (fileURL) {
+      BOOL isBundleFile = [fileURL.absoluteString containsString:@"Bundle"];
+      if (isBundleFile) {
+        NSURL *searchURL = [self urlForFileName:fileURL.lastPathComponent];
+        if (searchURL) {
+          fileURL = searchURL;
+        }
+      }
       if ([_webView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
-        NSURL *fileURL = [RCTConvert NSURL:file];
-        NSURL *baseURL = [RCTConvert NSURL:allowingReadAccessToURL];
         NSString *htmlString = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:nil];
-        if (htmlString) {
+        if (htmlString && !isBundleFile) {
           NSString *host = [NSString stringWithContentsOfURL:[fileURL URLByAppendingPathExtension:@"meta"] encoding:NSUTF8StringEncoding error:nil];
           NSURL *hostURL = nil;
           if (!host) {
-            hostURL = [fileURL URLByDeletingLastPathComponent];
+            hostURL = baseURL;
           } else {
             hostURL = [NSURL URLWithString:host];
           }
           [_webView loadHTMLString:htmlString baseURL:hostURL];
         } else {
-          [_webView loadFileURL:fileURL allowingReadAccessToURL:baseURL];
+          [_webView loadFileURL:fileURL allowingReadAccessToURL:[fileURL URLByDeletingLastPathComponent]];
         }
       } else {
-        NSURL *tempURL = [self fileURLForBuggyWKWebview8:[RCTConvert NSURL:file]];
-        [_webView loadRequest:[NSURLRequest requestWithURL:tempURL]];
+        [_webView loadRequest:[NSURLRequest requestWithURL:fileURL]];
       }
       return;
     }
@@ -310,25 +399,23 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
-- (NSURL *)fileURLForBuggyWKWebview8:(NSURL *)fileURL {
-  if (!fileURL.isFileURL) {
-    return fileURL;
-  }
-  NSError *error = nil;
-  [fileURL checkResourceIsReachableAndReturnError:&error];
-  if (error) {
-    return nil;
-  }
-  NSFileManager *fileManager = [NSFileManager defaultManager];
-  NSURL *tempDir = [[[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"www"] URLByAppendingPathComponent:@"files"];
-  [fileManager createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:nil];
-  NSURL *destURL = [tempDir URLByAppendingPathComponent:fileURL.lastPathComponent];
-  [fileManager removeItemAtURL:destURL error:nil];
-  [fileManager copyItemAtURL:fileURL toURL:destURL error:&error];
-  if (!error) {
-    return destURL;
+- (NSURL *)urlForFileName:(NSString *)filename atPath:(NSString *)path{
+  NSPredicate *predicate = [NSPredicate predicateWithFormat:@"self.lastPathComponent == %@", filename];
+  NSArray *matchingPaths = [[[NSFileManager defaultManager] subpathsAtPath:path] filteredArrayUsingPredicate:predicate];
+  if (matchingPaths.lastObject) {
+    return [[NSURL fileURLWithPath:path] URLByAppendingPathComponent:matchingPaths.lastObject];
   }
   return nil;
+}
+- (NSURL *)urlForFileName:(NSString *)fileName {
+  NSURL *path = nil;
+  path = [self urlForFileName:fileName atPath:[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject]];
+  if (!path) {
+    NSString *extension = [[fileName componentsSeparatedByString:@"."] lastObject];
+    NSString *name = [fileName substringToIndex:(fileName.length - extension.length - 1)];
+    path = [[NSBundle mainBundle] URLForResource:name withExtension:extension];
+  }
+  return path;
 }
 
 - (void)findInPage:(NSString *)searchString completed:(RCTResponseSenderBlock)callback {
