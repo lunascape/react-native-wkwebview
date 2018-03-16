@@ -234,7 +234,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)setSource:(NSDictionary *)source
 {
-  if (![_source isEqualToDictionary:source]) {
+  if (![_source isEqualToDictionary:source] || [source[@"forceUpdate"] boolValue]) {
     NSString *customAgent = source[@"customUserAgent"];
     NSString *oldAgent = _source[@"customUserAgent"];
     _source = [source copy];
@@ -245,7 +245,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": customAgent}];
       [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    if (![customAgent isEqualToString:oldAgent] && oldAgent) {
+    if (customAgent && oldAgent && ![customAgent isEqualToString:oldAgent]) {
       return;
     }
     // Allow loading local files:
