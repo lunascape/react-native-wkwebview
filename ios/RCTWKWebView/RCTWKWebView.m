@@ -234,7 +234,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)setSource:(NSDictionary *)source
 {
-  if (![_source isEqualToDictionary:source]) {
+  // Allow only new source or source with forceUpdate
+  // In many cases, current url in webview is different from url set in source because of redirect
+  // In the cases, we cannot access to the original url because new source is equal to the previous one
+  // forceUpdate param is useful at this time.
+  if (![_source isEqualToDictionary:source] || [source[@"forceUpdate"] boolValue]) {
     NSString *customAgent = source[@"customUserAgent"];
     NSString *oldAgent = _source[@"customUserAgent"];
     _source = [source copy];
@@ -245,7 +249,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"UserAgent": customAgent}];
       [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    if (![customAgent isEqualToString:oldAgent] && oldAgent) {
+    if (customAgent && oldAgent && ![customAgent isEqualToString:oldAgent]) {
       return;
     }
     // Allow loading local files:
