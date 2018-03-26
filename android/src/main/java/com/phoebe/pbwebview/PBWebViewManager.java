@@ -183,6 +183,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(url));
             webView.getContext().startActivity(intent);
+            webView.onOpenExternalApp(url);
             return true;
           }
           return false;
@@ -192,6 +193,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             // Checking supported scheme only
             if (customSchemes != null && customSchemes.contains(urlScheme)) {
               webView.shouldStartLoadWithRequest(url);
+              webView.onOpenExternalApp(url);
               return true;
             } else if (urlScheme.equalsIgnoreCase("intent")) {
               // Get payload and scheme the intent wants to open
@@ -204,6 +206,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
                 if (customSchemes != null && customSchemes.contains(scheme)) {
                   String convertedUrl = scheme + "://" + payload;
                   webView.shouldStartLoadWithRequest(convertedUrl);
+                  webView.onOpenExternalApp(url);
                   return true;
                 }
               }
@@ -434,6 +437,13 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       event.putBoolean("canGoBack", this.canGoBack());
       event.putBoolean("canGoForward", this.canGoForward());
       dispatchEvent(this, PBWebViewEvent.createStartRequestEvent(this.getId(), event));
+    }
+
+    public void onOpenExternalApp(String url) {
+      WritableMap data = Arguments.createMap();
+      data.putString("type", "onOpenExternalApp");
+      data.putString("url", url);
+      dispatchEvent(this, PBWebViewEvent.createMessageEvent(this.getId(), data));
     }
 
     public void captureScreen(String message) {
