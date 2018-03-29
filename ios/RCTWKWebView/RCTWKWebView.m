@@ -307,9 +307,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       [_webView loadHTMLString:@"" baseURL:nil];
       return;
     }
-    if ([self decisionHandlerURL:request.URL]) {
-      return;
-    }
     [self loadRequest:request];
   }
 }
@@ -480,6 +477,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   NSString* scheme = url.scheme;
   
   if ([self decisionHandlerURL:url]) {
+    _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onOpenExternalApp", @"data":@{@"url": request.URL.absoluteString}}});
     return decisionHandler(WKNavigationActionPolicyCancel);
   }
   
