@@ -183,6 +183,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(url));
             webView.getContext().startActivity(intent);
+            webView.shouldStartLoadWithRequest(url);
             webView.onOpenExternalApp(url);
             return true;
           }
