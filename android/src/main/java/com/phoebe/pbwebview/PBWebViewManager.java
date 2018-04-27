@@ -651,6 +651,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
                 if (type == HitTestResult.SRC_ANCHOR_TYPE) {
                   image_url = "";
                 }
+                // when any downloaded image file is showing in webview - https://github.com/lunascape/react-native-wkwebview/pull/45
                 if (type == HitTestResult.IMAGE_TYPE && url == null) {
                   url = image_url;
                 }
