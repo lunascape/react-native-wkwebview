@@ -659,7 +659,6 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
                 data.putString("type", "contextmenu");
                 data.putString("url", url);
                 data.putString("image_url", image_url);
-                System.out.println(data);
                 dispatchEvent(webView, PBWebViewEvent.createMessageEvent(webView.getId(), data));
               }
             }
