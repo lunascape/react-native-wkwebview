@@ -104,6 +104,7 @@ import org.json.JSONException;
  *  - title - title of the current page
  *  - canGoBack - boolean, whether there is anything on a history stack to go back
  *  - canGoForward - boolean, whether it is possible to request GO_FORWARD command
+ *  = progress - number, webview loading perncentage
  */
 @ReactModule(name = PBWebViewManager.REACT_CLASS)
 public class PBWebViewManager extends SimpleViewManager<WebView> {
@@ -264,6 +265,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       // like onPageFinished
       event.putString("url", url);
       event.putBoolean("loading", !mLastLoadFailed && webView.getProgress() != 100);
+      event.putDouble("progress", webView.getProgress());
       event.putString("title", webView.getTitle());
       event.putBoolean("canGoBack", webView.canGoBack());
       event.putBoolean("canGoForward", webView.canGoForward());
@@ -434,6 +436,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       event.putDouble("target", this.getId());
       event.putString("url", url);
       event.putBoolean("loading", false);
+      event.putDouble("progress", this.getProgress());
       event.putString("title", this.getTitle());
       event.putBoolean("canGoBack", this.canGoBack());
       event.putBoolean("canGoForward", this.canGoForward());
@@ -591,6 +594,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             event.putDouble("target", webView.getId());
             event.putString("url", url);
             event.putBoolean("loading", false);
+            event.putDouble("progress", webView.getProgress());
             event.putString("title", webView.getTitle());
             event.putBoolean("canGoBack", webView.canGoBack());
             event.putBoolean("canGoForward", webView.canGoForward());
