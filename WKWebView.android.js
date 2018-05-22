@@ -200,6 +200,13 @@ class WebView extends React.Component {
       'always',
       'compatibility'
     ]),
+    /**
+     * A RefreshControl component, used to provide pull-to-refresh
+     * functionality for the WebView.
+     *
+     * See [RefreshControl](docs/refreshcontrol.html).
+     */
+    refreshControl: PropTypes.element,
   };
 
   static defaultProps = {
@@ -284,6 +291,21 @@ class WebView extends React.Component {
         onCaptureScreen={this.onCaptureScreen}
         onLocationAskPermission={this.onLocationAskPermission}
       />;
+
+    
+    // This part is to handle the RefreshControl or Pull to Refresh webview feature.
+    const refreshControl = this.props.refreshControl;
+
+    if(refreshControl) {
+      return React.cloneElement(
+        refreshControl,
+        {},
+          <View style={styles.container}>
+              {webView}
+              {otherView}
+          </View>
+      );
+    }
 
     return (
       <View style={styles.container}>
