@@ -54,7 +54,8 @@
     "native",
     "wkwebview",
     "webview",
-    "ios"
+    "ios",
+    "android"
   ],
   "license": "MIT",
   "main": "index.js",

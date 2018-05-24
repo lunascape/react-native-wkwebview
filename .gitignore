@@ -2,4 +2,5 @@
 */.DS_Store
 
 ios/RCTWKWebView.xcodeproj/xcuserdata/*
-ios/RCTWKWebView.xcodeproj/project.xcworkspace/xcuserdata/*
+ios/RCTWKWebView.xcodeproj/project.xcworkspace/xcuserdata
+android/build
