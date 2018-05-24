@@ -1,5 +1,6 @@
 #import <WebKit/WebKit.h>
 
+#import <React/RCTEventEmitter.h>
 #import <React/RCTView.h>
 
 @class RCTWKWebView;
@@ -17,8 +18,18 @@ extern NSString *const RCTJSNavigationScheme;
 - (BOOL)webView:(RCTWKWebView *)webView
 shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
    withCallback:(RCTDirectEventBlock)callback;
+- (BOOL)webView:(RCTWKWebView *)webView
+shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
+   withCallback:(RCTDirectEventBlock)callback;
 
 @end
+
+typedef enum {
+    NoLock = 0,
+    LockDirectionUp,
+    LockDirectionDown,
+    LockDirectionBoth
+} LockScroll;
 
 @interface RCTWKWebView : RCTView
 
@@ -38,6 +49,9 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
 @property (nonatomic, copy) NSString *injectedJavaScript;
 @property (nonatomic, assign) BOOL hideKeyboardAccessoryView;
 @property (nonatomic, assign) BOOL keyboardDisplayRequiresUserAction;
+@property (nonatomic, assign) LockScroll lockScroll;
+@property (nonatomic, assign) BOOL scrollToTop;
+@property (nonatomic, assign) CGPoint adjustOffset;
 
 
 - (void)goForward;
@@ -48,5 +62,9 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
 - (void)stopLoading;
 - (void)postMessage:(NSString *)message;
 - (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *error))completionHandler;
+- (void)findInPage:(NSString *)searchString completed:(RCTResponseSenderBlock)callback;
+- (void)captureScreen:(RCTResponseSenderBlock)callback;
+- (void)capturePage:(RCTResponseSenderBlock)callback;
+- (void)printContent;
 
 @end

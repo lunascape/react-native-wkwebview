@@ -259,6 +259,21 @@ class WKWebView extends React.Component {
      * A Boolean value that sets whether diagonal scrolling is allowed.
     */
     directionalLockEnabled: PropTypes.bool,
+    /**
+     * Lunascape custom props
+     */
+    scrollToTop: PropTypes.bool,
+    lockScroll: PropTypes.number,
+    adjustOffset: PropTypes.object,
+    onShouldCreateNewWindow: PropTypes.func,
+  };
+
+  setNativeProps = (nativeProps) => {
+    try {
+      this.webview.setNativeProps(nativeProps);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   state = {
@@ -308,7 +323,13 @@ class WKWebView extends React.Component {
       WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
     });
 
-    let source = {};
+    const onShouldCreateNewWindow = this.props.onShouldCreateNewWindow && ((event: Event) => {
+      var shouldStart = this.props.onShouldCreateNewWindow &&
+      this.props.onShouldCreateNewWindow(event.nativeEvent);
+      WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
+    });
+
+    let source = this.props.source || {};
     if (this.props.source && typeof this.props.source == 'object') {
       source = Object.assign({}, this.props.source, {
         sendCookies: this.props.sendCookies,
@@ -354,6 +375,10 @@ class WKWebView extends React.Component {
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         pagingEnabled={this.props.pagingEnabled}
         directionalLockEnabled={this.props.directionalLockEnabled}
+        lockScroll={this.props.lockScroll}
+        scrollToTop={this.props.scrollToTop}
+        onShouldCreateNewWindow={onShouldCreateNewWindow}
+        onNavigationStateChange={this._updateNavigationState}
       />;
 
     return (
@@ -498,13 +523,33 @@ class WKWebView extends React.Component {
 
   _onMessage = (event: Event) => {
     var { onMessage } = this.props;
-    onMessage && onMessage(event);
+    onMessage && onMessage(event.nativeEvent);
   };
 
   _onScroll = (event: Event) => {
     const onScroll = this.props.onScroll;
     onScroll && onScroll(event.nativeEvent);
   };
+
+  captureScreen = (callback) => {
+    WKWebViewManager.captureScreen(this.getWebViewHandle(), callback);
+  }
+
+  capturePage = (callback) => {
+    WKWebViewManager.capturePage(this.getWebViewHandle(), callback);
+  }
+
+  printContent = () => {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.RCTWKWebView.Commands.printContent,
+      null
+    );
+  }
+
+  findInPage = (searchString, callback) => {
+    return WKWebViewManager.findInPage(this.getWebViewHandle(), searchString, callback);
+  }
 }
 
 const RCTWKWebView = requireNativeComponent('RCTWKWebView', WKWebView, {
