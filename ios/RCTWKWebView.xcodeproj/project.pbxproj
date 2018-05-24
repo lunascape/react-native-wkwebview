@@ -39,6 +39,8 @@
 		097457A91D2A457C000D9368 /* RCTWKWebViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.objc; path = RCTWKWebViewManager.m; sourceTree = "<group>"; tabWidth = 2; };
 		097457AC1D2A4595000D9368 /* RCTWKWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCTWKWebView.h; sourceTree = "<group>"; };
 		097457AD1D2A4595000D9368 /* RCTWKWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.objc; path = RCTWKWebView.m; sourceTree = "<group>"; tabWidth = 2; };
+		0B79275220B6BA910081C35B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		0B79275420B6BAA60081C35B /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0BCB38E320B6ADAA003E6C57 /* WKWebView+Highlight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "WKWebView+Highlight.h"; sourceTree = "<group>"; };
 		0BCB38E420B6ADAA003E6C57 /* WKWebView+Highlight.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+Highlight.m"; sourceTree = "<group>"; };
 		0BCB38E520B6ADAB003E6C57 /* WKWebView+Capture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+Capture.m"; sourceTree = "<group>"; };
@@ -107,6 +109,7 @@
 				3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */,
 				E683F3D32080F2E10005F1F5 /* WKProcessPool+SharedProcessPool.h */,
 				E683F3D62080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m */,
+				0B79275320B6BA910081C35B /* Localizable.strings */,
 			);
 			path = RCTWKWebView;
 			sourceTree = "<group>";
@@ -181,6 +184,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ja,
 			);
 			mainGroup = 097457911D2A440A000D9368;
 			productRefGroup = 0974579B1D2A440A000D9368 /* Products */;
@@ -228,11 +232,24 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		0B79275320B6BA910081C35B /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0B79275220B6BA910081C35B /* en */,
+				0B79275420B6BAA60081C35B /* ja */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		097457A11D2A440A000D9368 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -284,6 +301,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";

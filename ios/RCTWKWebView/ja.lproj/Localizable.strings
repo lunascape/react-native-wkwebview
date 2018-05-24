@@ -1,0 +1,12 @@
+/* 
+  Localizable.strings
+  RCTWKWebView
+
+  Created by binh nguyen on 9/25/17.
+
+*/
+"Username" = "ユーザ名";
+"Password" = "パスワード";
+"Cancel" = "キャンセル";
+"Login" = "ログイン";
+"Login_title" = "%sにログイン";
