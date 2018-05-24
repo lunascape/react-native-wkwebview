@@ -14,6 +14,7 @@
 		0BCB38E920B6ADAB003E6C57 /* WKWebView+Highlight.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB38E420B6ADAA003E6C57 /* WKWebView+Highlight.m */; };
 		0BCB38EA20B6ADAB003E6C57 /* WKWebView+Capture.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB38E520B6ADAB003E6C57 /* WKWebView+Capture.m */; };
 		0BCB38EB20B6ADAB003E6C57 /* WKWebView+BrowserHack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB38E720B6ADAB003E6C57 /* WKWebView+BrowserHack.m */; };
+		0BCB394220B6B682003E6C57 /* _webview.js in Resources */ = {isa = PBXBuildFile; fileRef = 0BCB394120B6B682003E6C57 /* _webview.js */; };
 		3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */; };
 		E683F3D72080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m in Sources */ = {isa = PBXBuildFile; fileRef = E683F3D62080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m */; };
 /* End PBXBuildFile section */
@@ -44,6 +45,9 @@
 		0BCB38E620B6ADAB003E6C57 /* WKWebView+Capture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "WKWebView+Capture.h"; sourceTree = "<group>"; };
 		0BCB38E720B6ADAB003E6C57 /* WKWebView+BrowserHack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+BrowserHack.m"; sourceTree = "<group>"; };
 		0BCB38E820B6ADAB003E6C57 /* WKWebView+BrowserHack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "WKWebView+BrowserHack.h"; sourceTree = "<group>"; };
+		0BCB393B20B6B657003E6C57 /* Scripts.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scripts.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		0BCB393D20B6B657003E6C57 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0BCB394120B6B682003E6C57 /* _webview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = _webview.js; sourceTree = "<group>"; };
 		3E609CF41EAA815D00187C8C /* WeakScriptMessageDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeakScriptMessageDelegate.h; sourceTree = "<group>"; };
 		3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WeakScriptMessageDelegate.m; sourceTree = "<group>"; };
 		E683F3D32080F2E10005F1F5 /* WKProcessPool+SharedProcessPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "WKProcessPool+SharedProcessPool.h"; sourceTree = "<group>"; };
@@ -58,6 +62,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0BCB393820B6B657003E6C57 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -65,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				0974579C1D2A440A000D9368 /* RCTWKWebView */,
+				0BCB393C20B6B657003E6C57 /* Scripts */,
 				0974579B1D2A440A000D9368 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -73,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				0974579A1D2A440A000D9368 /* libRCTWKWebView.a */,
+				0BCB393B20B6B657003E6C57 /* Scripts.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -98,6 +111,15 @@
 			path = RCTWKWebView;
 			sourceTree = "<group>";
 		};
+		0BCB393C20B6B657003E6C57 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				0BCB394120B6B682003E6C57 /* _webview.js */,
+				0BCB393D20B6B657003E6C57 /* Info.plist */,
+			);
+			path = Scripts;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -118,6 +140,23 @@
 			productReference = 0974579A1D2A440A000D9368 /* libRCTWKWebView.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		0BCB393A20B6B657003E6C57 /* Scripts */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0BCB394020B6B657003E6C57 /* Build configuration list for PBXNativeTarget "Scripts" */;
+			buildPhases = (
+				0BCB393720B6B657003E6C57 /* Sources */,
+				0BCB393820B6B657003E6C57 /* Frameworks */,
+				0BCB393920B6B657003E6C57 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Scripts;
+			productName = Scripts;
+			productReference = 0BCB393B20B6B657003E6C57 /* Scripts.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -128,6 +167,11 @@
 				TargetAttributes = {
 					097457991D2A440A000D9368 = {
 						CreatedOnToolsVersion = 7.3.1;
+					};
+					0BCB393A20B6B657003E6C57 = {
+						CreatedOnToolsVersion = 9.2;
+						DevelopmentTeam = F2PE95WC7L;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -144,9 +188,21 @@
 			projectRoot = "";
 			targets = (
 				097457991D2A440A000D9368 /* RCTWKWebView */,
+				0BCB393A20B6B657003E6C57 /* Scripts */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0BCB393920B6B657003E6C57 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0BCB394220B6B682003E6C57 /* _webview.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		097457961D2A440A000D9368 /* Sources */ = {
@@ -160,6 +216,13 @@
 				0BCB38EA20B6ADAB003E6C57 /* WKWebView+Capture.m in Sources */,
 				0BCB38EB20B6ADAB003E6C57 /* WKWebView+BrowserHack.m in Sources */,
 				0BCB38E920B6ADAB003E6C57 /* WKWebView+Highlight.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0BCB393720B6B657003E6C57 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,6 +357,52 @@
 			};
 			name = Release;
 		};
+		0BCB393E20B6B657003E6C57 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = F2PE95WC7L;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = Scripts/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_BUNDLE_IDENTIFIER = jp.co.lunascape.Scripts;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		0BCB393F20B6B657003E6C57 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = F2PE95WC7L;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = Scripts/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_BUNDLE_IDENTIFIER = jp.co.lunascape.Scripts;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -311,6 +420,15 @@
 			buildConfigurations = (
 				097457A41D2A440A000D9368 /* Debug */,
 				097457A51D2A440A000D9368 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0BCB394020B6B657003E6C57 /* Build configuration list for PBXNativeTarget "Scripts" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0BCB393E20B6B657003E6C57 /* Debug */,
+				0BCB393F20B6B657003E6C57 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
