@@ -649,11 +649,15 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
             public void handleMessage(Message msg) {
               String url = (String) msg.getData().get("url");
               String image_url = extra;
-              if (url == null) {
+              if (url == null && image_url == null) {
                 super.handleMessage(msg);
               } else {
                 if (type == HitTestResult.SRC_ANCHOR_TYPE) {
                   image_url = "";
+                }
+                // when any downloaded image file is showing in webview - https://github.com/lunascape/react-native-wkwebview/pull/45
+                if (type == HitTestResult.IMAGE_TYPE && url == null) {
+                  url = image_url;
                 }
                 WritableMap data = Arguments.createMap();
                 data.putString("type", "contextmenu");
