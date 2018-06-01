@@ -204,7 +204,7 @@ class WebView extends React.Component {
      * A RefreshControl component, used to provide pull-to-refresh
      * functionality for the WebView.
      *
-     * See [RefreshControl](docs/refreshcontrol.html).
+     * See [RefreshControl](https://facebook.github.io/react-native/docs/refreshcontrol.html).
      */
     refreshControl: PropTypes.element,
   };
