@@ -506,6 +506,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
                                                                                                  @"title": _webView.title,
                                                                                                  @"canGoBack": @(_webView.canGoBack),
                                                                                                  @"canGoForward" : @(_webView.canGoForward),
+                                                                                                 @"progress" : @(_webView.estimatedProgress),
                                                                                                  }];
   
   return event;
