@@ -763,12 +763,44 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       return;
     }
     
+    //  In case of WKWebview can't handle a link(deep link), check if there is any application in iPhone can handle, then open link by that application. In addition, other deeplinks also handled automatic by iOS.
+    NSURL *url = error.userInfo[NSURLErrorFailingURLErrorKey];
+    BOOL shouldOpenDeeplink = !url || [url.scheme isEqualToString:@"https"] || [url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"ftp"];
+    if (error.code == -1002 && error.userInfo[NSURLErrorFailingURLStringErrorKey] && !shouldOpenDeeplink) {
+      if ([[UIApplication sharedApplication] respondsToSelector:@selector(openURL:options:completionHandler:)]) {
+        [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
+          if (success) {
+            if (_onLoadingFinish) {
+              _onLoadingFinish([self baseEvent]);
+            }
+          } else {
+            [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
+          }
+        }];
+      } else {
+        [[UIApplication sharedApplication] openURL:url];
+        if (_onLoadingFinish) {
+          _onLoadingFinish([self baseEvent]);
+        }
+      }
+    } else {
+      [self sendError:error forURLString:error.userInfo[NSURLErrorFailingURLStringErrorKey]];
+    }
+  }
+}
+
+- (void)sendError:(NSError *)error forURLString:(NSString *)url {
+  if (_onLoadingError) {
+    isDisplayingError = YES;
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
     [event addEntriesFromDictionary:@{
                                       @"domain": error.domain,
                                       @"code": @(error.code),
                                       @"description": error.localizedDescription,
                                       }];
+    NSDictionary *errorInfo = event.copy;
+    [event setValue:errorInfo forKey:@"error"];
+    [event setValue:url forKey:@"url"];
     _onLoadingError(event);
   }
 }
