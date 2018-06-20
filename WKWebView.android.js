@@ -363,6 +363,12 @@ class WebView extends React.Component {
     );
   };
 
+
+  // Bookmarklet handling
+  evaluateJavaScript = (js) => {
+    this.injectJavaScript(js);
+  };
+
   /**
   * Injects a javascript string into the referenced WebView. Deliberately does not
   * return a response because using eval() to return a response breaks this method
