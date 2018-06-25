@@ -670,7 +670,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
           Message msg = handler.obtainMessage();
           webView.requestFocusNodeHref(msg);
         }
-        return true;
+        return false;
       }
     });
 
