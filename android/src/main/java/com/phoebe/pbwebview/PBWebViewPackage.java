@@ -12,10 +12,15 @@ import com.facebook.react.uimanager.ViewManager;
 import java.util.*;
 
 public class PBWebViewPackage implements ReactPackage {
+    private PBWebViewManager manager;
+    private PBWebViewModule module;
 
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
+        module = new PBWebViewModule(reactContext);
+        module.setPackage(this);
+        modules.add(module);
         return modules;
     }
 
@@ -27,8 +32,18 @@ public class PBWebViewPackage implements ReactPackage {
     @Override
     public List<ViewManager> createViewManagers(
                               ReactApplicationContext reactContext) {
+        manager = new PBWebViewManager();
+        manager.setPackage(this);
       return Arrays.<ViewManager>asList(
-        new PBWebViewManager()
+        manager
       );
+    }
+
+    public PBWebViewManager getManager(){
+        return manager;
+    }
+
+    public PBWebViewModule getModule(){
+        return module;
     }
 }
