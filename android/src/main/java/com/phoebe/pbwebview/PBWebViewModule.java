@@ -20,6 +20,7 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
 
     @VisibleForTesting
     public static final String REACT_CLASS = "AndroidWebViewModule";
+    public static final int OPEN_PICKER_REQUEST_CODE = 123;
 
     public PBWebViewModule(ReactApplicationContext context) {
         super(context);
@@ -54,7 +55,7 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
         // super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
+        if (requestCode == OPEN_PICKER_REQUEST_CODE) {
             if (null == mUploadMessage && null == mUploadCallbackAboveL){
                 return;
             }
@@ -70,7 +71,7 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void onActivityResultAboveL(int requestCode, int resultCode, Intent data) {
-        if (requestCode != 1 || mUploadCallbackAboveL == null) {
+        if (requestCode != OPEN_PICKER_REQUEST_CODE || mUploadCallbackAboveL == null) {
             return;
         }
         Uri[] results = null;

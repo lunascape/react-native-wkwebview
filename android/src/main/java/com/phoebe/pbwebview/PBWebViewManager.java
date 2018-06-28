@@ -633,35 +633,35 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
       protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
         module.setUploadMessage(uploadMsg);
-        openFileChooserView();
+        openFileChooserView(acceptType);
       }
 
       protected void openFileChooser(ValueCallback<Uri> uploadMsg)
       {
         module.setUploadMessage(uploadMsg);
-        openFileChooserView();
+        openFileChooserView(null);
       }
 
       protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture)
       {
         module.setUploadMessage(uploadMsg);
-        openFileChooserView();
+        openFileChooserView(acceptType);
       }
 
       @TargetApi(Build.VERSION_CODES.LOLLIPOP)
       @Override
       public boolean onShowFileChooser (WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
         module.setmUploadCallbackAboveL(filePathCallback);
-        openFileChooserView();
+        module.getActivity().startActivityForResult(fileChooserParams.createIntent(), PBWebViewModule.OPEN_PICKER_REQUEST_CODE);
         return true;
       }
 
-      private void openFileChooserView(){
+      private void openFileChooserView(String acceptType){
         try {
           final Intent galleryIntent = new Intent(Intent.ACTION_PICK);
-          galleryIntent.setType("image/*");
+          galleryIntent.setType(acceptType != null ? acceptType : "image/*");
           final Intent chooserIntent = Intent.createChooser(galleryIntent, "Choose File");
-          module.getActivity().startActivityForResult(chooserIntent, 1);
+          module.getActivity().startActivityForResult(chooserIntent, PBWebViewModule.OPEN_PICKER_REQUEST_CODE);
         } catch (Exception e) {
           Log.d("customwebview", e.toString());
         }
