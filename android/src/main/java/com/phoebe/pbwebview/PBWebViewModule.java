@@ -28,12 +28,17 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
     private ValueCallback<Uri> mUploadMessage;
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     private PBWebViewPackage mPackage;
+    private ValueCallback<Uri[]> filePathCallback;
+
+    // @todo this could be configured from JS
+    final String[] DEFAULT_MIME_TYPES = {"image/*", "video/*"};
 
     @VisibleForTesting
     public static final String REACT_CLASS = "AndroidWebViewModule";
     public static final int OPEN_PICKER_REQUEST_CODE = 123;
     private String mCameraPhotoPath;
     private Uri mCapturedImageURI = null;
+    private Uri mCapturedVideoURI = null;
 
     public PBWebViewModule(ReactApplicationContext context) {
         super(context);
@@ -87,14 +92,32 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
         final Intent captureIntent = new Intent(
                 android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
+        // Create camera captured video file path and name
+        File videoFile = new File(
+                imageStorageDir + File.separator + "VID_"
+                        + String.valueOf(System.currentTimeMillis())
+                        + ".mp4");
+        mCapturedVideoURI = Uri.fromFile(videoFile);        
+        // Video capture intent
+        final Intent takeVideoIntent = new Intent(
+                android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
+        takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedVideoURI);
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType("image/*");
         // Create file chooser intent
         Intent chooserIntent = Intent.createChooser(i, activity.getResources().getString(R.string.image_select));
         // Set camera intent to file chooser
-        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS
+        if ( ( acceptType.toLowerCase().contains("image") && acceptType.toLowerCase().contains("video") ) || acceptType.isEmpty()) {
+            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS
+                , new Parcelable[] { captureIntent, takeVideoIntent });
+        } else if (acceptType.toLowerCase().contains("image")) {
+            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS
                 , new Parcelable[] { captureIntent });
+        } else if (acceptType.toLowerCase().contains("video")) {
+            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS
+                , new Parcelable[] { takeVideoIntent });
+        }
         // On select image call onActivityResult method of activity
         activity.startActivityForResult(chooserIntent, PBWebViewModule.OPEN_PICKER_REQUEST_CODE);
     }
@@ -106,6 +129,8 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
             mUploadCallbackAboveL.onReceiveValue(null);
         }
         mUploadCallbackAboveL = filePathCallback;
+        this.filePathCallback = filePathCallback;
+        final String[] acceptTypes = getSafeAcceptedTypes(fileChooserParams);        
 
         Activity activity = this.getActivity();
         String[] types = fileChooserParams.getAcceptTypes();
@@ -114,7 +139,7 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
             // Create the File where the photo should go
             File photoFile = null;
             try {
-                photoFile = createImageFile();
+                photoFile = createCapturedFile("image-", ".jpg");
                 takePictureIntent.putExtra("PhotoPath", mCameraPhotoPath);
             } catch (IOException ex) {
                 // Error occurred while creating the File
@@ -129,12 +154,38 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
                 takePictureIntent = null;
             }
         }
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if (takeVideoIntent.resolveActivity(activity.getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createCapturedFile("video-", ".mp4");
+                takeVideoIntent.putExtra("PhotoPath", mCameraPhotoPath);
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                Log.e("customwebview", "Unable to create Video File", ex);
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                mCameraPhotoPath = "file:" + photoFile.getAbsolutePath();
+                takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(photoFile));
+            } else {
+                takeVideoIntent = null;
+            }
+        }
         Intent contentSelectionIntent = new Intent(Intent.ACTION_GET_CONTENT);
         contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE);
         contentSelectionIntent.setType("image/*");
         Intent[] intentArray;
-        if (takePictureIntent != null) {
+        if (isArrayEmpty(types) && takePictureIntent != null && takeVideoIntent != null) {
+            intentArray = new Intent[]{takePictureIntent, takeVideoIntent};
+        } else if (acceptsImages(types) && acceptsVideo(types) && takePictureIntent != null && takeVideoIntent != null) {
+            intentArray = new Intent[]{takePictureIntent, takeVideoIntent};
+        } else if (acceptsImages(types) && takePictureIntent != null) {
             intentArray = new Intent[]{takePictureIntent};
+        } else if (acceptsVideo(types) && takeVideoIntent != null) {
+            intentArray = new Intent[]{takeVideoIntent};
         } else {
             intentArray = new Intent[0];
         }
@@ -190,12 +241,57 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
     }
     public void onNewIntent(Intent intent) {}
 
-    private File createImageFile() throws IOException {
+    private File createCapturedFile(String prefix, String suffix) throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File tempFile = File.createTempFile(imageFileName, ".jpg", getActivity().getCacheDir());
+        String imageFileName = prefix + "_" + timeStamp + "_";
+        File externalDataDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+		File cameraDataDir = new File(externalDataDir.getAbsolutePath() + File.separator + "browser-photos");
+		cameraDataDir.mkdirs();
+        File tempFile = File.createTempFile(imageFileName, suffix, getActivity().getCacheDir());
+        // File tempFile = File.createTempFile(imageFileName, suffix, cameraDataDir);
         tempFile.setWritable(true, false);
         return tempFile;
+    }
+
+    private Boolean acceptsImages(String[] types) {
+        return arrayContainsString(types, "image");
+    }
+
+    private Boolean acceptsVideo(String[] types) {
+        return arrayContainsString(types, "video");
+    }
+
+    private Boolean arrayContainsString(String[] array, String pattern){
+        for(String content : array){
+            if(content.contains(pattern)){
+                return true;
+            }
+        }
+        return false;
+    }
+    private String[] getSafeAcceptedTypes(WebChromeClient.FileChooserParams params) {
+        // the getAcceptTypes() is available only in api 21+
+        // for lower level, we ignore it
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return params.getAcceptTypes();
+        }
+
+        final String[] EMPTY = {};
+        return EMPTY;
+    }
+    private String[] getAcceptedMimeType(String[] types) {
+        if (isArrayEmpty(types)) {
+            return DEFAULT_MIME_TYPES;
+        }
+        return types;
+    }
+
+    private Boolean isArrayEmpty(String[] arr) {
+        // when our array returned from getAcceptTypes() has no values set from the webview
+        // i.e. <input type="file" />, without any "accept" attr
+        // will be an array with one empty string element, afaik
+        return arr.length == 0 ||
+                (arr.length == 1 && arr[0].length() == 0);
     }
 }
