@@ -134,58 +134,28 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
 
         Activity activity = this.getActivity();
         String[] types = fileChooserParams.getAcceptTypes();
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createCapturedFile("image-", ".jpg");
-                takePictureIntent.putExtra("PhotoPath", mCameraPhotoPath);
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                Log.e("customwebview", "Unable to create Image File", ex);
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                mCameraPhotoPath = "file:" + photoFile.getAbsolutePath();
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(photoFile));
-            } else {
-                takePictureIntent = null;
-            }
-        }
-        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        if (takeVideoIntent.resolveActivity(activity.getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createCapturedFile("video-", ".mp4");
-                takeVideoIntent.putExtra("PhotoPath", mCameraPhotoPath);
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                Log.e("customwebview", "Unable to create Video File", ex);
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                mCameraPhotoPath = "file:" + photoFile.getAbsolutePath();
-                takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(photoFile));
-            } else {
-                takeVideoIntent = null;
-            }
-        }
+        
         Intent contentSelectionIntent = new Intent(Intent.ACTION_GET_CONTENT);
         contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE);
-        contentSelectionIntent.setType("image/*");
+        String[] mimetypes;
         Intent[] intentArray;
-        if (isArrayEmpty(types) && takePictureIntent != null && takeVideoIntent != null) {
-            intentArray = new Intent[]{takePictureIntent, takeVideoIntent};
-        } else if (acceptsImages(types) && acceptsVideo(types) && takePictureIntent != null && takeVideoIntent != null) {
-            intentArray = new Intent[]{takePictureIntent, takeVideoIntent};
-        } else if (acceptsImages(types) && takePictureIntent != null) {
-            intentArray = new Intent[]{takePictureIntent};
-        } else if (acceptsVideo(types) && takeVideoIntent != null) {
-            intentArray = new Intent[]{takeVideoIntent};
+        if (isArrayEmpty(types)) {
+            intentArray = new Intent[]{createCameraIntent(), createCamcorderIntent(), createSoundRecorderIntent()};
+            contentSelectionIntent.setType("*/*");
+        } else if (acceptsImages(types) && acceptsVideo(types)) {
+            intentArray = new Intent[]{createCameraIntent(), createCamcorderIntent()};
+            contentSelectionIntent.setType("image/*");
+            mimetypes = new String[]{"video/*", "image/*"};
+            contentSelectionIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
+        } else if (acceptsImages(types)) {
+            intentArray = new Intent[]{createCameraIntent()};
+            contentSelectionIntent.setType("image/*");
+        } else if (acceptsVideo(types)) {
+            intentArray = new Intent[]{createCamcorderIntent()};
+            contentSelectionIntent.setType("video/*");
+        } else if (acceptsAudio(types)) {
+            intentArray = new Intent[]{createSoundRecorderIntent()};
+            contentSelectionIntent.setType("audio/*");
         } else {
             intentArray = new Intent[0];
         }
@@ -195,7 +165,7 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentArray);
         activity.startActivityForResult(chooserIntent, OPEN_PICKER_REQUEST_CODE);
         return true;
-    }
+   }
 
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
@@ -241,17 +211,42 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
     }
     public void onNewIntent(Intent intent) {}
 
+    private Intent createCameraIntent() {
+        Activity activity = this.getActivity();
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createCapturedFile("JPEG_", ".jpg");
+                takePictureIntent.putExtra("PhotoPath", mCameraPhotoPath);
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                Log.e("customwebview", "Unable to create Image File", ex);
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                mCameraPhotoPath = "file:" + photoFile.getAbsolutePath();
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(photoFile));
+            } else {
+                takePictureIntent = null;
+            }
+        }
+        return takePictureIntent;
+    }
+    private Intent createCamcorderIntent() {
+        return new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+    }
+    private Intent createSoundRecorderIntent() {
+        return new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+    }
+
     private File createCapturedFile(String prefix, String suffix) throws IOException {
-        // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = prefix + "_" + timeStamp + "_";
-        File externalDataDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-		File cameraDataDir = new File(externalDataDir.getAbsolutePath() + File.separator + "browser-photos");
-		cameraDataDir.mkdirs();
-        File tempFile = File.createTempFile(imageFileName, suffix, getActivity().getCacheDir());
-        // File tempFile = File.createTempFile(imageFileName, suffix, cameraDataDir);
-        tempFile.setWritable(true, false);
-        return tempFile;
+        String imageFileName = prefix + "_" + timeStamp;
+        File storageDir = getReactApplicationContext().getExternalFilesDir(null);
+        return File.createTempFile(imageFileName, suffix, storageDir);
     }
 
     private Boolean acceptsImages(String[] types) {
@@ -260,6 +255,9 @@ public class PBWebViewModule extends ReactContextBaseJavaModule implements Activ
 
     private Boolean acceptsVideo(String[] types) {
         return arrayContainsString(types, "video");
+    }
+    private Boolean acceptsAudio(String[] types) {
+        return arrayContainsString(types, "audio");
     }
 
     private Boolean arrayContainsString(String[] array, String pattern){
