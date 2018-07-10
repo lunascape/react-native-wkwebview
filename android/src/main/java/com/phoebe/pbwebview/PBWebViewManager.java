@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
@@ -135,6 +136,15 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
   private WebViewConfig mWebViewConfig;
   private @Nullable WebView.PictureListener mPictureListener;
+  private PBWebViewPackage mPackage;
+
+  public void setPackage(PBWebViewPackage aPackage){
+    this.mPackage = aPackage;
+  }
+
+  public PBWebViewPackage getPackage(){
+    return this.mPackage;
+  }
 
   protected static class ReactWebViewClient extends WebViewClient {
 
@@ -546,6 +556,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       WebView.enableSlowWholeDocumentDraw();
     }
     final PBWebView webView = new PBWebView(reactContext);
+    final PBWebViewModule module = this.mPackage.getModule();
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
@@ -617,6 +628,24 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
         transport.setWebView(newView);
         resultMsg.sendToTarget();
         return true;
+      }
+
+      protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
+        module.openFileChooserView(uploadMsg, acceptType);
+      }
+
+      protected void openFileChooser(ValueCallback<Uri> uploadMsg) {
+        module.openFileChooserView(uploadMsg, null);
+      }
+
+      protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
+        module.openFileChooserView(uploadMsg, acceptType);
+      }
+
+      @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+      @Override
+      public boolean onShowFileChooser (WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
+        return module.openFileChooserViewL(filePathCallback, fileChooserParams);
       }
     });
     reactContext.addLifecycleEventListener(webView);
