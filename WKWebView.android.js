@@ -219,6 +219,7 @@ class WebView extends React.Component {
     lastErrorEvent: null,
     startInLoadingState: true,
   };
+  otherView = null;
 
   componentWillMount() {
     if (this.props.startInLoadingState) {
@@ -227,13 +228,13 @@ class WebView extends React.Component {
   }
 
   render() {
-    var otherView = null;
-
+    let errorStyle = {};
    if (this.state.viewState === WebViewState.LOADING) {
-      otherView = (this.props.renderLoading || defaultRenderLoading)();
+      this.otherView = (this.props.renderLoading || defaultRenderLoading)();
     } else if (this.state.viewState === WebViewState.ERROR) {
+      errorStyle = {opacity: 0};
       var errorEvent = this.state.lastErrorEvent;
-      otherView = this.props.renderError && this.props.renderError(
+      this.otherView = this.props.renderError && this.props.renderError(
         errorEvent.domain,
         errorEvent.code,
         errorEvent.description);
@@ -241,7 +242,7 @@ class WebView extends React.Component {
       console.error('RCTWebView invalid state encountered: ' + this.state.loading);
     }
 
-    var webViewStyles = [styles.container, this.props.style];
+    var webViewStyles = [styles.container, this.props.style, errorStyle];
     if (this.state.viewState === WebViewState.LOADING ||
       this.state.viewState === WebViewState.ERROR) {
       // if we're in either LOADING or ERROR states, don't show the webView
@@ -301,16 +302,16 @@ class WebView extends React.Component {
         refreshControl,
         {},
           <View style={styles.container}>
-              {webView}
-              {otherView}
+            {this.otherView}
+            {webView}
           </View>
       );
     }
 
     return (
       <View style={styles.container}>
+        {this.otherView}
         {webView}
-        {otherView}
       </View>
     );
   }
