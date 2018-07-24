@@ -95,6 +95,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _webView.scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
     lastOffset = _webView.scrollView.contentOffset;
     
+    // add pull down to reload feature in scrollview of webview - Fix issue 1174
+    UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
+    [refreshControl addTarget:self action:@selector(handleRefresh:) forControlEvents:UIControlEventValueChanged];
+    [_webView.scrollView addSubview:refreshControl];
+    
 #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000 /* __IPHONE_11_0 */
     // `contentInsetAdjustmentBehavior` is only available since iOS 11.
     // We set the default behavior to "never" so that iOS
@@ -534,6 +539,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       _onNavigationStateChange([self baseEvent]);
     }
   }
+}
+
+-(void)handleRefresh:(UIRefreshControl *)refresh {
+  // reload webview
+  [_webView reload];
+  [refresh endRefreshing];
 }
 
 - (void)dealloc
