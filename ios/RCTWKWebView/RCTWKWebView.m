@@ -44,7 +44,6 @@
 @property (nonatomic, strong) WKUserScript *atEndScript;
 @property (nonatomic, copy) RCTDirectEventBlock onNavigationStateChange;
 @property (nonatomic, copy) RCTDirectEventBlock onShouldCreateNewWindow;
-@property (nonatomic) UIRefreshControl *refreshControl;
 
 @end
 
