@@ -723,7 +723,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
     return webView;
   }
-  
+
   @ReactProp(name = "javaScriptEnabled")
   public void setJavaScriptEnabled(WebView view, boolean enabled) {
     view.getSettings().setJavaScriptEnabled(enabled);
