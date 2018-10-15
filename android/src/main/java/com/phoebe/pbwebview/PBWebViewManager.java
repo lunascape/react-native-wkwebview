@@ -81,6 +81,8 @@ import com.facebook.react.views.webview.events.TopLoadingFinishEvent;
 import com.facebook.react.views.webview.events.TopLoadingStartEvent;
 import com.facebook.react.views.webview.events.TopMessageEvent;
 import com.phoebe.events.PBWebViewEvent;
+import android.webkit.URLUtil;
+import android.webkit.DownloadListener;
 
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -664,6 +666,22 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     if (ReactBuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       WebView.setWebContentsDebuggingEnabled(true);
     }
+
+    webView.setDownloadListener(new DownloadListener() {
+      // @Override
+      public void onDownloadStart(String url, String userAgent,
+                                        String contentDisposition, String mimetype,
+                                        long contentLength) {
+        final String filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
+        WritableMap data = Arguments.createMap();
+        data.putString("type", "downloadAction");
+        data.putString("url", url);
+        data.putString("contentDisposition", contentDisposition);
+        data.putString("filename", filename);
+        data.putString("mimetype", mimetype);
+        dispatchEvent(webView, PBWebViewEvent.createMessageEvent(webView.getId(), data));
+      }
+    });
 
     webView.setOnLongClickListener(new View.OnLongClickListener() {
       @Override
