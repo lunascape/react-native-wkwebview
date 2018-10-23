@@ -208,7 +208,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     "};";
     WKUserScript *script = [[WKUserScript alloc] initWithSource:source
                                                   injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
-                                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
                                                forMainFrameOnly:_injectedJavaScriptForMainFrameOnly];
     [_webView.configuration.userContentController addUserScript:script];
   }
@@ -707,6 +706,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     }]];
     [[[UIApplication sharedApplication].delegate window].rootViewController presentViewController:alertView animated:YES completion:nil];
   }
+}
 // #if DEBUG
 // - (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
 //   NSURLCredential * credential = [[NSURLCredential alloc] initWithTrust:[challenge protectionSpace].serverTrust];
@@ -731,8 +731,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     longPress = NO;
     return decisionHandler(WKNavigationActionPolicyCancel);
   }
-  
-  BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
   
   // handle mailto and tel schemes
   if ([scheme isEqualToString:@"mailto"] || [scheme isEqualToString:@"tel"]) {
@@ -882,9 +880,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   [webView evaluateJavaScript:@"document.body.style.webkitTouchCallout='none';" completionHandler:nil];
 }
 
-- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
-  decisionHandler(WKNavigationResponsePolicyAllow);
-}
+// - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
+//   decisionHandler(WKNavigationResponsePolicyAllow);
+// }
 
 #pragma mark - WKUIDelegate
 
