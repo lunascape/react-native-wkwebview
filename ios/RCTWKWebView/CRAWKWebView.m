@@ -1,4 +1,4 @@
-#import "RCTWKWebView.h"
+#import "CRAWKWebView.h"
 
 #import "WeakScriptMessageDelegate.h"
 
@@ -30,7 +30,7 @@
 }
 @end
 
-@interface RCTWKWebView () <WKNavigationDelegate, RCTAutoInsetsProtocol, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, UIGestureRecognizerDelegate>
+@interface CRAWKWebView () <WKNavigationDelegate, RCTAutoInsetsProtocol, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, UIGestureRecognizerDelegate>
 
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingStart;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingFinish;
@@ -39,6 +39,7 @@
 @property (nonatomic, copy) RCTDirectEventBlock onProgress;
 @property (nonatomic, copy) RCTDirectEventBlock onMessage;
 @property (nonatomic, copy) RCTDirectEventBlock onScroll;
+@property (nonatomic, copy) RCTDirectEventBlock onNavigationResponse;
 @property (assign) BOOL sendCookies;
 @property (nonatomic, strong) WKUserScript *atStartScript;
 @property (nonatomic, strong) WKUserScript *atEndScript;
@@ -47,7 +48,7 @@
 
 @end
 
-@implementation RCTWKWebView
+@implementation CRAWKWebView
 {
   WKWebView *_webView;
   BOOL _injectJavaScriptForMainFrameOnly;
@@ -180,6 +181,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
+- (void)setMessagingEnabled:(BOOL)messagingEnabled {
+  _messagingEnabled = messagingEnabled;
+  [self setupPostMessageScript];
+}
+
 - (void)resetupScripts {
   [_webView.configuration.userContentController removeAllUserScripts];
   [self setupPostMessageScript];
@@ -193,9 +199,16 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)setupPostMessageScript {
   if (_messagingEnabled) {
-    NSString *source=@"window.originalPostMessage = window.postMessage; window.postMessage = function (data) { window.webkit.messageHandlers.reactNative.postMessage(data); }";
+    NSString *source = @"window.originalPostMessage = window.postMessage;"
+    "window.postMessage = function(message, targetOrigin, transfer) {"
+      "window.webkit.messageHandlers.reactNative.postMessage(message);"
+      "if (typeof targetOrigin !== 'undefined') {"
+        "window.originalPostMessage(message, targetOrigin, transfer);"
+      "}"
+    "};";
     WKUserScript *script = [[WKUserScript alloc] initWithSource:source
                                                   injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
+                                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
                                                forMainFrameOnly:_injectedJavaScriptForMainFrameOnly];
     [_webView.configuration.userContentController addUserScript:script];
   }
@@ -631,6 +644,28 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   
   NSDictionary *event = [self onScrollEvent:scrollView.contentOffset moveDistance:CGPointMake(0, 0)];
   _onMessage(@{@"name":@"reactNative", @"body": @{@"type":@"onScrollEndDecelerating", @"data":event}});
+  // NSDictionary *event = @{
+  //                         @"contentOffset": @{
+  //                             @"x": @(scrollView.contentOffset.x),
+  //                             @"y": @(scrollView.contentOffset.y)
+  //                             },
+  //                         @"contentInset": @{
+  //                             @"top": @(scrollView.contentInset.top),
+  //                             @"left": @(scrollView.contentInset.left),
+  //                             @"bottom": @(scrollView.contentInset.bottom),
+  //                             @"right": @(scrollView.contentInset.right)
+  //                             },
+  //                         @"contentSize": @{
+  //                             @"width": @(scrollView.contentSize.width),
+  //                             @"height": @(scrollView.contentSize.height)
+  //                             },
+  //                         @"layoutMeasurement": @{
+  //                             @"width": @(scrollView.frame.size.width),
+  //                             @"height": @(scrollView.frame.size.height)
+  //                             },
+  //                         @"zoomScale": @(scrollView.zoomScale ?: 1),
+  //                         };
+  // _onScroll(event);
 }
 
 #pragma mark - WKNavigationDelegate methods
@@ -672,7 +707,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     }]];
     [[[UIApplication sharedApplication].delegate window].rootViewController presentViewController:alertView animated:YES completion:nil];
   }
-}
+// #if DEBUG
+// - (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
+//   NSURLCredential * credential = [[NSURLCredential alloc] initWithTrust:[challenge protectionSpace].serverTrust];
+//   completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+// }
 
 - (void)webView:(__unused WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
@@ -692,6 +731,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     longPress = NO;
     return decisionHandler(WKNavigationActionPolicyCancel);
   }
+  
+  BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
   
   // handle mailto and tel schemes
   if ([scheme isEqualToString:@"mailto"] || [scheme isEqualToString:@"tel"]) {
@@ -915,6 +956,27 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView
 {
   RCTLogWarn(@"Webview Process Terminated");
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
+  if (_onNavigationResponse) {
+    NSDictionary *headers = @{};
+    NSInteger statusCode = 200;
+    if([navigationResponse.response isKindOfClass:[NSHTTPURLResponse class]]){
+        headers = ((NSHTTPURLResponse *)navigationResponse.response).allHeaderFields;
+        statusCode = ((NSHTTPURLResponse *)navigationResponse.response).statusCode;
+    }
+
+    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+    [event addEntriesFromDictionary:@{
+                                      @"headers": headers,
+                                      @"status": [NSHTTPURLResponse localizedStringForStatusCode:statusCode],
+                                      @"statusCode": @(statusCode),
+                                      }];
+    _onNavigationResponse(event);
+  }
+
+  decisionHandler(WKNavigationResponsePolicyAllow);
 }
 
 @end
