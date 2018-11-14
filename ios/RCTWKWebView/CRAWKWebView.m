@@ -181,10 +181,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
-- (void)setMessagingEnabled:(BOOL)messagingEnabled {
-  _messagingEnabled = messagingEnabled;
-  [self setupPostMessageScript];
-}
+// Removing this part, this is sending all post messages in the onMessage event which we do not need in phoebe-mobile
+// - (void)setMessagingEnabled:(BOOL)messagingEnabled {
+//   _messagingEnabled = messagingEnabled;
+//   [self setupPostMessageScript];
+// }
 
 - (void)resetupScripts {
   [_webView.configuration.userContentController removeAllUserScripts];
