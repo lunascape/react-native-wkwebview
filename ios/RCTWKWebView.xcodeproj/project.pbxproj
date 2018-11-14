@@ -7,15 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		097457AB1D2A457C000D9368 /* RCTWKWebViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 097457A91D2A457C000D9368 /* RCTWKWebViewManager.m */; };
-		097457AE1D2A4595000D9368 /* RCTWKWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 097457AD1D2A4595000D9368 /* RCTWKWebView.m */; };
-		097457AF1D2AF4E0000D9368 /* RCTWKWebView.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 097457AC1D2A4595000D9368 /* RCTWKWebView.h */; };
-		097457B01D2AF4E0000D9368 /* RCTWKWebViewManager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 097457A81D2A457C000D9368 /* RCTWKWebViewManager.h */; };
 		0BCB38E920B6ADAB003E6C57 /* WKWebView+Highlight.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB38E420B6ADAA003E6C57 /* WKWebView+Highlight.m */; };
 		0BCB38EA20B6ADAB003E6C57 /* WKWebView+Capture.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB38E520B6ADAB003E6C57 /* WKWebView+Capture.m */; };
 		0BCB38EB20B6ADAB003E6C57 /* WKWebView+BrowserHack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB38E720B6ADAB003E6C57 /* WKWebView+BrowserHack.m */; };
 		0BCB394220B6B682003E6C57 /* _webview.js in Resources */ = {isa = PBXBuildFile; fileRef = 0BCB394120B6B682003E6C57 /* _webview.js */; };
 		3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */; };
+		D1FAADBC219C2680007ABF19 /* CRAWKWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = D1FAADB9219C2680007ABF19 /* CRAWKWebView.m */; };
+		D1FAADBD219C2680007ABF19 /* CRAWKWebViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D1FAADBB219C2680007ABF19 /* CRAWKWebViewManager.m */; };
 		E683F3D72080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m in Sources */ = {isa = PBXBuildFile; fileRef = E683F3D62080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m */; };
 /* End PBXBuildFile section */
 
@@ -26,8 +24,6 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				097457AF1D2AF4E0000D9368 /* RCTWKWebView.h in CopyFiles */,
-				097457B01D2AF4E0000D9368 /* RCTWKWebViewManager.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -35,10 +31,6 @@
 
 /* Begin PBXFileReference section */
 		0974579A1D2A440A000D9368 /* libRCTWKWebView.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTWKWebView.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		097457A81D2A457C000D9368 /* RCTWKWebViewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCTWKWebViewManager.h; sourceTree = "<group>"; };
-		097457A91D2A457C000D9368 /* RCTWKWebViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.objc; path = RCTWKWebViewManager.m; sourceTree = "<group>"; tabWidth = 2; };
-		097457AC1D2A4595000D9368 /* RCTWKWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCTWKWebView.h; sourceTree = "<group>"; };
-		097457AD1D2A4595000D9368 /* RCTWKWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.objc; path = RCTWKWebView.m; sourceTree = "<group>"; tabWidth = 2; };
 		0B79275220B6BA910081C35B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0B79275420B6BAA60081C35B /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0BCB38E320B6ADAA003E6C57 /* WKWebView+Highlight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "WKWebView+Highlight.h"; sourceTree = "<group>"; };
@@ -52,6 +44,10 @@
 		0BCB394120B6B682003E6C57 /* _webview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = _webview.js; sourceTree = "<group>"; };
 		3E609CF41EAA815D00187C8C /* WeakScriptMessageDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeakScriptMessageDelegate.h; sourceTree = "<group>"; };
 		3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WeakScriptMessageDelegate.m; sourceTree = "<group>"; };
+		D1FAADB8219C2680007ABF19 /* CRAWKWebViewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CRAWKWebViewManager.h; sourceTree = "<group>"; };
+		D1FAADB9219C2680007ABF19 /* CRAWKWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CRAWKWebView.m; sourceTree = "<group>"; };
+		D1FAADBA219C2680007ABF19 /* CRAWKWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CRAWKWebView.h; sourceTree = "<group>"; };
+		D1FAADBB219C2680007ABF19 /* CRAWKWebViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CRAWKWebViewManager.m; sourceTree = "<group>"; };
 		E683F3D32080F2E10005F1F5 /* WKProcessPool+SharedProcessPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "WKProcessPool+SharedProcessPool.h"; sourceTree = "<group>"; };
 		E683F3D62080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "WKProcessPool+SharedProcessPool.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -95,16 +91,16 @@
 		0974579C1D2A440A000D9368 /* RCTWKWebView */ = {
 			isa = PBXGroup;
 			children = (
+				D1FAADBA219C2680007ABF19 /* CRAWKWebView.h */,
+				D1FAADB9219C2680007ABF19 /* CRAWKWebView.m */,
+				D1FAADB8219C2680007ABF19 /* CRAWKWebViewManager.h */,
+				D1FAADBB219C2680007ABF19 /* CRAWKWebViewManager.m */,
 				0BCB38E820B6ADAB003E6C57 /* WKWebView+BrowserHack.h */,
 				0BCB38E720B6ADAB003E6C57 /* WKWebView+BrowserHack.m */,
 				0BCB38E620B6ADAB003E6C57 /* WKWebView+Capture.h */,
 				0BCB38E520B6ADAB003E6C57 /* WKWebView+Capture.m */,
 				0BCB38E320B6ADAA003E6C57 /* WKWebView+Highlight.h */,
 				0BCB38E420B6ADAA003E6C57 /* WKWebView+Highlight.m */,
-				097457AC1D2A4595000D9368 /* RCTWKWebView.h */,
-				097457AD1D2A4595000D9368 /* RCTWKWebView.m */,
-				097457A81D2A457C000D9368 /* RCTWKWebViewManager.h */,
-				097457A91D2A457C000D9368 /* RCTWKWebViewManager.m */,
 				3E609CF41EAA815D00187C8C /* WeakScriptMessageDelegate.h */,
 				3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */,
 				E683F3D32080F2E10005F1F5 /* WKProcessPool+SharedProcessPool.h */,
@@ -213,11 +209,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				097457AB1D2A457C000D9368 /* RCTWKWebViewManager.m in Sources */,
 				3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */,
 				E683F3D72080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m in Sources */,
-				097457AE1D2A4595000D9368 /* RCTWKWebView.m in Sources */,
+				D1FAADBC219C2680007ABF19 /* CRAWKWebView.m in Sources */,
 				0BCB38EA20B6ADAB003E6C57 /* WKWebView+Capture.m in Sources */,
+				D1FAADBD219C2680007ABF19 /* CRAWKWebViewManager.m in Sources */,
 				0BCB38EB20B6ADAB003E6C57 /* WKWebView+BrowserHack.m in Sources */,
 				0BCB38E920B6ADAB003E6C57 /* WKWebView+Highlight.m in Sources */,
 			);
