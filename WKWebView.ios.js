@@ -188,6 +188,10 @@ class WKWebView extends React.Component {
      */
     onScroll: PropTypes.func,
     /**
+     * A callback to get response headers, http status code and http localized status code.
+     */
+    onNavigationResponse: PropTypes.func,
+    /**
      * @platform ios
      */
     bounces: PropTypes.bool,
@@ -259,6 +263,15 @@ class WKWebView extends React.Component {
      * A Boolean value that sets whether diagonal scrolling is allowed.
     */
     directionalLockEnabled: PropTypes.bool,
+    /*
+     * The manner in which the keyboard is dismissed when a drag begins in the
+     * scroll view.
+    */
+    keyboardDismissMode: PropTypes.oneOf([
+      'none', // Default
+      'on-drag',
+      'interactive', // iOS only
+    ]),
     /**
      * Lunascape custom props
      */
@@ -274,6 +287,7 @@ class WKWebView extends React.Component {
     } catch (err) {
       console.log(err);
     }
+
   };
 
   state = {
@@ -328,19 +342,19 @@ class WKWebView extends React.Component {
       this.props.onShouldCreateNewWindow(event.nativeEvent);
       WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
     });
-
-    let source = this.props.source || {};
-    if (this.props.source && typeof this.props.source == 'object') {
+    
+    let source = this.props.source;
+    if (this.props.source && typeof this.props.source === 'object') {
       source = Object.assign({}, this.props.source, {
         sendCookies: this.props.sendCookies,
         customUserAgent: this.props.customUserAgent || this.props.userAgent
       });
-    }
 
-    if (this.props.html) {
-      source.html = this.props.html;
-    } else if (this.props.url) {
-      source.uri = this.props.url;
+      if (this.props.html) {
+        source.html = this.props.html;
+      } else if (this.props.url) {
+        source.uri = this.props.url;
+      }
     }
 
     const messagingEnabled = typeof this.props.onMessage === 'function';
@@ -379,6 +393,8 @@ class WKWebView extends React.Component {
         scrollToTop={this.props.scrollToTop}
         onShouldCreateNewWindow={onShouldCreateNewWindow}
         onNavigationStateChange={this._updateNavigationState}
+        onNavigationResponse={this._onNavigationResponse}
+        keyboardDismissMode={this.props.keyboardDismissMode}
       />;
 
     return (
@@ -549,6 +565,10 @@ class WKWebView extends React.Component {
 
   findInPage = (searchString, callback) => {
     return WKWebViewManager.findInPage(this.getWebViewHandle(), searchString, callback);
+  }
+  _onNavigationResponse = (event: Event) => {
+    const { onNavigationResponse } = this.props;
+    onNavigationResponse && onNavigationResponse(event)
   }
 }
 
