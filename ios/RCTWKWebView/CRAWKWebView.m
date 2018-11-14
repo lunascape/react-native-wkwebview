@@ -1,4 +1,4 @@
-#import "RCTWKWebView.h"
+#import "CRAWKWebView.h"
 
 #import "WeakScriptMessageDelegate.h"
 
@@ -39,6 +39,7 @@
 @property (nonatomic, copy) RCTDirectEventBlock onProgress;
 @property (nonatomic, copy) RCTDirectEventBlock onMessage;
 @property (nonatomic, copy) RCTDirectEventBlock onScroll;
+@property (nonatomic, copy) RCTDirectEventBlock onNavigationResponse;
 @property (assign) BOOL sendCookies;
 @property (nonatomic, strong) WKUserScript *atStartScript;
 @property (nonatomic, strong) WKUserScript *atEndScript;
@@ -180,6 +181,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
+- (void)setMessagingEnabled:(BOOL)messagingEnabled {
+  _messagingEnabled = messagingEnabled;
+  [self setupPostMessageScript];
+}
+
 - (void)resetupScripts {
   [_webView.configuration.userContentController removeAllUserScripts];
   [self setupPostMessageScript];
@@ -193,9 +199,16 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)setupPostMessageScript {
   if (_messagingEnabled) {
-    NSString *source=@"window.originalPostMessage = window.postMessage; window.postMessage = function (data) { window.webkit.messageHandlers.reactNative.postMessage(data); }";
+    NSString *source = @"window.originalPostMessage = window.postMessage;"
+    "window.postMessage = function(message, targetOrigin, transfer) {"
+      "window.webkit.messageHandlers.reactNative.postMessage(message);"
+      "if (typeof targetOrigin !== 'undefined') {"
+        "window.originalPostMessage(message, targetOrigin, transfer);"
+      "}"
+    "};";
     WKUserScript *script = [[WKUserScript alloc] initWithSource:source
-                                                  injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
+                                                  // injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
+                                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
                                                forMainFrameOnly:_injectedJavaScriptForMainFrameOnly];
     [_webView.configuration.userContentController addUserScript:script];
   }
@@ -841,9 +854,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   [webView evaluateJavaScript:@"document.body.style.webkitTouchCallout='none';" completionHandler:nil];
 }
 
-- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
-  decisionHandler(WKNavigationResponsePolicyAllow);
-}
 
 #pragma mark - WKUIDelegate
 
@@ -915,6 +925,27 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView
 {
   RCTLogWarn(@"Webview Process Terminated");
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
+  if (_onNavigationResponse) {
+    NSDictionary *headers = @{};
+    NSInteger statusCode = 200;
+    if([navigationResponse.response isKindOfClass:[NSHTTPURLResponse class]]){
+        headers = ((NSHTTPURLResponse *)navigationResponse.response).allHeaderFields;
+        statusCode = ((NSHTTPURLResponse *)navigationResponse.response).statusCode;
+    }
+
+    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+    [event addEntriesFromDictionary:@{
+                                      @"headers": headers,
+                                      @"status": [NSHTTPURLResponse localizedStringForStatusCode:statusCode],
+                                      @"statusCode": @(statusCode),
+                                      }];
+    _onNavigationResponse(event);
+  }
+
+  decisionHandler(WKNavigationResponsePolicyAllow);
 }
 
 @end
