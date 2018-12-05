@@ -17,6 +17,7 @@
 		0BCB394220B6B682003E6C57 /* _webview.js in Resources */ = {isa = PBXBuildFile; fileRef = 0BCB394120B6B682003E6C57 /* _webview.js */; };
 		3E609CF61EAA815D00187C8C /* WeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */; };
 		E683F3D72080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m in Sources */ = {isa = PBXBuildFile; fileRef = E683F3D62080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m */; };
+		F57672A521B69AA9007823F0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B79275320B6BA910081C35B /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -203,6 +204,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0BCB394220B6B682003E6C57 /* _webview.js in Resources */,
+				F57672A521B69AA9007823F0 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
