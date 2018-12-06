@@ -21,14 +21,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Picture;
@@ -178,61 +175,40 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-      Uri uri = Uri.parse(url);
-      PBWebView webView = (PBWebView) view;
-      if (uri == null) {
-        return false;
+      if (url == null) {
+          return false;
       }
-      String urlScheme = uri.getScheme();
-        if (urlScheme.equalsIgnoreCase("http") || urlScheme.equalsIgnoreCase("https") ||
-                urlScheme.equalsIgnoreCase("file")) {
-          String customOverrideUrlFormat = webView.getCustomOverrideUrlFormat();
-          if (customOverrideUrlFormat == null || customOverrideUrlFormat.length() == 0 || Pattern.compile(customOverrideUrlFormat) == null) {
-            return false;
+      PBWebView webView = (PBWebView) view;
+      webView.shouldStartLoadWithRequest(url);
+      ArrayList<Object> customSchemes = webView.getCustomSchemes();
+      if (customSchemes != null) {
+        Uri uri = Uri.parse(url);
+        String scheme = uri.getScheme();
+        for (Object customScheme : customSchemes) {
+          if (customScheme == null) {
+            continue;
           }
-          Pattern pattern = Pattern.compile(customOverrideUrlFormat);
-          Matcher matcher = pattern.matcher(url);
-          if (matcher.find()) {
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
-            webView.getContext().startActivity(intent);
-            webView.shouldStartLoadWithRequest(url);
-            webView.onOpenExternalApp(url);
+          String customSchemeString = (String) customScheme;
+          if (customSchemeString.equalsIgnoreCase(scheme)) {
             return true;
           }
-          return false;
-        } else {
-          ArrayList<Object> customSchemes = webView.getCustomSchemes();
-          try {
-            // Checking supported scheme only
-            if (customSchemes != null && customSchemes.contains(urlScheme)) {
-              webView.shouldStartLoadWithRequest(url);
-              webView.onOpenExternalApp(url);
-              return true;
-            } else if (urlScheme.equalsIgnoreCase("intent")) {
-              // Get payload and scheme the intent wants to open
-              Pattern pattern = Pattern.compile("^intent://(\\S*)#Intent;.*scheme=([a-zA-Z]+)");
-              Matcher matcher = pattern.matcher(url);
-              if (matcher.find()) {
-                String payload = matcher.group(1);
-                String scheme = matcher.group(2);
-                // Checking supported scheme only
-                if (customSchemes != null && customSchemes.contains(scheme)) {
-                  String convertedUrl = scheme + "://" + payload;
-                  webView.shouldStartLoadWithRequest(convertedUrl);
-                  webView.onOpenExternalApp(url);
-                  return true;
-                }
-              }
-            }
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            view.getContext().startActivity(intent);
-          } catch (ActivityNotFoundException e) {
-            FLog.w(ReactConstants.TAG, "activity not found to handle uri scheme for: " + url, e);
-          }
-          return true;
         }
+      }
+
+      ArrayList<Object> customPrefixes = webView.getCustomPrefixes();
+      if (customPrefixes != null) {
+        String lowerUrl = url.toLowerCase();
+        for (Object customPrefix: customPrefixes) {
+          if (customPrefix == null) {
+            continue;
+          }
+          String customPrefixString = (String) customPrefix;
+          if (lowerUrl.startsWith(customPrefixString.toLowerCase())) {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     @Override
@@ -325,7 +301,7 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     private @Nullable String injectedJS;
     private boolean messagingEnabled = false;
     private ArrayList<Object> customSchemes = new ArrayList<>();
-    private String customOverrideUrlFormat = "";
+    private ArrayList<Object> customPrefixes = new ArrayList<>();
     private GeolocationPermissions.Callback _callback;
 
     private class ReactWebViewBridge {
@@ -429,12 +405,12 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
       return this.customSchemes;
     }
 
-    public void setCustomOverrideUrlFormat(String format) {
-      this.customOverrideUrlFormat = format;
+    public void setCustomPrefixes(ArrayList<Object> customPrefixes) {
+      this.customPrefixes = customPrefixes;
     }
 
-    public String getCustomOverrideUrlFormat() {
-      return this.customOverrideUrlFormat;
+    public ArrayList<Object> getCustomPrefixes() {
+      return customPrefixes;
     }
 
     private void cleanupCallbacksAndDestroy() {
@@ -854,9 +830,9 @@ public class PBWebViewManager extends SimpleViewManager<WebView> {
     ((PBWebView)view).setCustomSchemes(schemes.toArrayList());
   }
 
-  @ReactProp(name = "customOverrideUrlFormat")
-  public void setCustomOverrideUrlFormat(WebView view, String customOverrideUrlFormat) {
-    ((PBWebView)view).setCustomOverrideUrlFormat(customOverrideUrlFormat);
+  @ReactProp(name = "customPrefixes")
+  public void setCustomPrefixes(WebView view, ReadableArray schemes) {
+    ((PBWebView)view).setCustomPrefixes(schemes.toArrayList());
   }
 
   @Override
