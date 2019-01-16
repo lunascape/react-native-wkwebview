@@ -1,6 +1,6 @@
-#import "RCTWKWebViewManager.h"
+#import "CRAWKWebViewManager.h"
 
-#import "RCTWKWebView.h"
+#import "CRAWKWebView.h"
 #import "WKProcessPool+SharedProcessPool.h"
 #import <React/RCTBridge.h>
 #import <React/RCTUtils.h>
@@ -20,6 +20,12 @@ RCT_ENUM_CONVERTER(UIScrollViewContentInsetAdjustmentBehavior, (@{
                                                                   @"always": @(UIScrollViewContentInsetAdjustmentAlways),
                                                                   }), UIScrollViewContentInsetAdjustmentNever, integerValue)
 #endif
+
+RCT_ENUM_CONVERTER(UIScrollViewKeyboardDismissMode, (@{
+                                                      @"none": @(UIScrollViewKeyboardDismissModeNone),
+                                                      @"on-drag": @(UIScrollViewKeyboardDismissModeOnDrag),
+                                                      @"interactive": @(UIScrollViewKeyboardDismissModeInteractive),
+                                                      }), UIScrollViewKeyboardDismissModeNone, integerValue)
 
 @end
 
@@ -46,6 +52,7 @@ RCT_EXPORT_VIEW_PROPERTY(source, NSDictionary)
 RCT_REMAP_VIEW_PROPERTY(bounces, _webView.scrollView.bounces, BOOL)
 RCT_REMAP_VIEW_PROPERTY(pagingEnabled, _webView.scrollView.pagingEnabled, BOOL)
 RCT_REMAP_VIEW_PROPERTY(scrollEnabled, _webView.scrollView.scrollEnabled, BOOL)
+RCT_REMAP_VIEW_PROPERTY(keyboardDismissMode, _webView.scrollView.keyboardDismissMode, UIScrollViewKeyboardDismissMode)
 RCT_REMAP_VIEW_PROPERTY(directionalLockEnabled, _webView.scrollView.directionalLockEnabled, BOOL)
 RCT_REMAP_VIEW_PROPERTY(allowsBackForwardNavigationGestures, _webView.allowsBackForwardNavigationGestures, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(injectJavaScriptForMainFrameOnly, BOOL)
@@ -69,6 +76,7 @@ RCT_EXPORT_VIEW_PROPERTY(allowsLinkPreview, BOOL)
 #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000 /* __IPHONE_11_0 */
 RCT_EXPORT_VIEW_PROPERTY(contentInsetAdjustmentBehavior, UIScrollViewContentInsetAdjustmentBehavior)
 #endif
+RCT_EXPORT_VIEW_PROPERTY(onNavigationResponse, RCTDirectEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(onNavigationStateChange, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onShouldCreateNewWindow, RCTDirectEventBlock)
@@ -107,6 +115,7 @@ RCT_EXPORT_METHOD(canGoBack:(nonnull NSNumber *)reactTag
   [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, CRAWKWebView *> *viewRegistry) {
     CRAWKWebView *view = viewRegistry[reactTag];
     
+
     resolve([NSNumber numberWithBool:[view canGoBack]]);
   }];
 }
@@ -118,6 +127,7 @@ RCT_EXPORT_METHOD(canGoForward:(nonnull NSNumber *)reactTag
   [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, CRAWKWebView *> *viewRegistry) {
     CRAWKWebView *view = viewRegistry[reactTag];
     
+
     resolve([NSNumber numberWithBool:[view canGoForward]]);
   }];
 }
