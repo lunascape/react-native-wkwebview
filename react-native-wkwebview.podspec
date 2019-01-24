@@ -16,6 +16,11 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/CRAlpha/react-native-wkwebview.git", :tag => "v#{s.version}" }
 
   s.source_files  = "ios/RCTWKWebView/*.{h,m}"
-
+  s.resource_bundle = {
+      "Scripts" => [
+        "ios/RCTWKWebView/*.lproj/*.strings",
+        "ios/Scripts/_webview.js"
+      ]
+  }
   s.dependency "React"
 end
