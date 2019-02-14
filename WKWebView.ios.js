@@ -512,6 +512,14 @@ class WKWebView extends React.Component {
   _onLoadingError = (event: Event) => {
     event.persist(); // persist this event because we need to store it
     const { onError, onLoadEnd } = this.props;
+    const isCancelled = event && event.nativeEvent && event.nativeEvent.code === 102;
+    if (isCancelled) {
+      onLoadEnd && onLoadEnd(event);
+      this.setState({
+        viewState: WebViewState.IDLE,
+      });
+      return;
+    }
     onError && onError(event);
     onLoadEnd && onLoadEnd(event);
     console.warn('Encountered an error loading page', event.nativeEvent);

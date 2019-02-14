@@ -235,9 +235,9 @@ class WebView extends React.Component {
       errorStyle = {opacity: 0};
       var errorEvent = this.state.lastErrorEvent;
       this.otherView = this.props.renderError && this.props.renderError(
-        errorEvent.domain,
-        errorEvent.code,
-        errorEvent.description);
+        errorEvent.description,
+        -1,
+        errorEvent.title);
     } else if (this.state.viewState !== WebViewState.IDLE) {
       console.error('RCTWebView invalid state encountered: ' + this.state.loading);
     }
