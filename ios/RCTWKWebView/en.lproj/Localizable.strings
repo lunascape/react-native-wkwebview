@@ -10,3 +10,5 @@
 "Cancel" = "Cancel";
 "Login" = "Login";
 "Login_title" = "Login to %s";
+"CaptureScreenError" = "Failed to Capture Screen";
+

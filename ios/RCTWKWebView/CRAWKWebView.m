@@ -453,7 +453,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     BOOL isWrited = [binaryImageData writeToFile:path atomically:YES];
     if (isWrited) {
       callback(@[path]);
+      return;
     }
+    else { // Error while capturing the screen
+      NSLog(@"Capture Screen FAILED! with error");
+      UIAlertView *alert = [[UIAlertView alloc]
+      initWithTitle:LocalizeString(@"CaptureScreenError")
+      message:nil
+      delegate:self
+      cancelButtonTitle:@"Ok"
+      otherButtonTitles:nil];
+      [alert show];
+      };
   }];
 }
 
