@@ -458,7 +458,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     else { // Error while capturing the screen
       NSLog(@"Capture Screen FAILED! with error");
       UIAlertView *alert = [[UIAlertView alloc]
-      initWithTitle:@"保存に失敗しました"
+      initWithTitle:LocalizeString(@"CaptureScreenError")
       message:nil
       delegate:self
       cancelButtonTitle:@"Ok"

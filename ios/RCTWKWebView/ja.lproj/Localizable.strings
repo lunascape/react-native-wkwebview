@@ -10,3 +10,4 @@
 "Cancel" = "キャンセル";
 "Login" = "ログイン";
 "Login_title" = "%sにログイン";
+"CaptureScreenError" = "保存に失敗しました";
