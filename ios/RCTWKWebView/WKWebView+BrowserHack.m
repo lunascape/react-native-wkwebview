@@ -286,10 +286,11 @@
         {
             //Doing nothing
         }
-        else if ([[url scheme] isEqualToString:@"javascript"])
-        {
-            href = nil;
-        }
+        // Send bookmarlet links to the on Message
+        // else if ([[url scheme] isEqualToString:@"javascript"])
+        // {
+        //     href = nil;
+        // }
         else
         {
             
