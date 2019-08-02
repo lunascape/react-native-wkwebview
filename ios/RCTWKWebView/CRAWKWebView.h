@@ -11,7 +11,7 @@
  *
  *   window.location.href = RCTJSNavigationScheme + '://hello'
  */
-extern NSString *const RCTJSNavigationScheme;
+extern NSString *const RNCJSNavigationScheme;
 
 @protocol CRAWKWebViewDelegate <NSObject>
 
