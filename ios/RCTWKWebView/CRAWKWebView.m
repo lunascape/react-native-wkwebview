@@ -711,7 +711,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     return decisionHandler(WKNavigationActionPolicyCancel);
   }
   
-  BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
+  BOOL isJSNavigation = [scheme isEqualToString:RNCJSNavigationScheme];
   
   if (longPress) {
     longPress = NO;
