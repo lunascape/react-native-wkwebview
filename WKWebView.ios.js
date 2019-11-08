@@ -340,7 +340,7 @@ class WKWebView extends React.Component {
     const onShouldCreateNewWindow = this.props.onShouldCreateNewWindow && ((event: Event) => {
       var shouldStart = this.props.onShouldCreateNewWindow &&
       this.props.onShouldCreateNewWindow(event.nativeEvent);
-      WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
+      WKWebViewManager.createNewWindowWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
     });
     
     let source = this.props.source;
