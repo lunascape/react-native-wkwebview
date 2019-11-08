@@ -35,11 +35,19 @@ RCT_ENUM_CONVERTER(UIScrollViewKeyboardDismissMode, (@{
 
 @implementation CRAWKWebViewManager
 {
-  NSConditionLock *_shouldStartLoadLock;
-  BOOL _shouldStartLoad;
+  NSMutableDictionary* shouldStartRequestConditions;
+  NSMutableDictionary* shouldCreateWindowConditions;
 }
 
 RCT_EXPORT_MODULE()
+
+- (id)init {
+    self = [super init];
+    
+    shouldStartRequestConditions = @{}.mutableCopy;
+    shouldCreateWindowConditions = @{}.mutableCopy;
+    return self;
+}
 
 - (UIView *)view
 {
@@ -243,16 +251,17 @@ RCT_EXPORT_METHOD(printContent:(nonnull NSNumber *)reactTag) {
 shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
    withCallback:(RCTDirectEventBlock)callback
 {
-  _shouldStartLoadLock = [[NSConditionLock alloc] initWithCondition:arc4random()];
-  _shouldStartLoad = YES;
-  request[@"lockIdentifier"] = @(_shouldStartLoadLock.condition);
+  NSConditionLock *condition = [[NSConditionLock alloc] initWithCondition:arc4random()];
+  NSString* key = @(condition.condition).stringValue;
+  [shouldStartRequestConditions setObject:@{@"result": @(YES), @"condition": condition} forKey:key];
+  request[@"lockIdentifier"] = @(condition.condition);
   callback(request);
   
   // Block the main thread for a maximum of 250ms until the JS thread returns
-  if ([_shouldStartLoadLock lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
-    BOOL returnValue = _shouldStartLoad;
-    [_shouldStartLoadLock unlock];
-    _shouldStartLoadLock = nil;
+  if ([condition lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
+    BOOL returnValue = [[[shouldStartRequestConditions objectForKey:key] objectForKey:@"result"] boolValue];
+    [condition unlock];
+    [shouldStartRequestConditions removeObjectForKey:key];
     return returnValue;
   } else {
     RCTLogWarn(@"Did not receive response to shouldStartLoad in time, defaulting to YES");
@@ -264,31 +273,47 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
 shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
    withCallback:(RCTDirectEventBlock)callback
 {
-  _shouldStartLoadLock = [[NSConditionLock alloc] initWithCondition:arc4random()];
-  _shouldStartLoad = YES;
-  request[@"lockIdentifier"] = @(_shouldStartLoadLock.condition);
+  NSConditionLock* condition = [[NSConditionLock alloc] initWithCondition:arc4random()];
+  NSString* key = @(condition.condition).stringValue;
+  [shouldCreateWindowConditions setObject:@{@"result": @(YES), @"condition": condition} forKey:key];
+  request[@"lockIdentifier"] = @(condition.condition);
   callback(request);
   
   // Block the main thread for a maximum of 250ms until the JS thread returns
-  if ([_shouldStartLoadLock lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
-    BOOL returnValue = _shouldStartLoad;
-    [_shouldStartLoadLock unlock];
-    _shouldStartLoadLock = nil;
+  if ([condition lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
+    BOOL returnValue = [[[shouldCreateWindowConditions objectForKey:key] objectForKey:@"result"] boolValue];
+    [condition unlock];
+    [shouldCreateWindowConditions removeObjectForKey:key];
     return returnValue;
   } else {
-    RCTLogWarn(@"Did not receive response to shouldStartLoad in time, defaulting to YES");
+    RCTLogWarn(@"Did not receive response to shouldCreateNewWindow in time, defaulting to YES");
     return YES;
   }
 }
 
 RCT_EXPORT_METHOD(startLoadWithResult:(BOOL)result lockIdentifier:(NSInteger)lockIdentifier)
 {
-  if ([_shouldStartLoadLock tryLockWhenCondition:lockIdentifier]) {
-    _shouldStartLoad = result;
-    [_shouldStartLoadLock unlockWithCondition:0];
+  NSString* key = @(lockIdentifier).stringValue;
+  NSConditionLock* condition = [[shouldStartRequestConditions objectForKey:key] objectForKey:@"condition"];
+  if (condition && [condition tryLockWhenCondition:lockIdentifier]) {
+    [shouldStartRequestConditions setObject:@{@"result": @(result), @"condition": condition} forKey:key];
+    [condition unlockWithCondition:0];
   } else {
     RCTLogWarn(@"startLoadWithResult invoked with invalid lockIdentifier: "
-               "got %zd, expected %zd", lockIdentifier, _shouldStartLoadLock.condition);
+               "got %zd, expected %zd", lockIdentifier, condition.condition);
+  }
+}
+
+RCT_EXPORT_METHOD(createNewWindowWithResult:(BOOL)result lockIdentifier:(NSInteger)lockIdentifier)
+{
+  NSString* key = @(lockIdentifier).stringValue;
+  NSConditionLock* condition = [[shouldCreateWindowConditions objectForKey:key] objectForKey:@"condition"];
+  if (condition && [condition tryLockWhenCondition:lockIdentifier]) {
+    [shouldCreateWindowConditions setObject:@{@"result": @(result), @"condition": condition} forKey:key];
+    [condition unlockWithCondition:0];
+  } else {
+    RCTLogWarn(@"createNewWindowWithResult invoked with invalid lockIdentifier: "
+               "got %zd, expected %zd", lockIdentifier, condition.condition);
   }
 }
 
