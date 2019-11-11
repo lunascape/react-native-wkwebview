@@ -71,6 +71,27 @@
 
 RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
+- (instancetype)initWithConfiguration:(WKWebViewConfiguration *)configuration
+{
+  if(self = [self initWithFrame:CGRectZero])
+  {
+    super.backgroundColor = [UIColor clearColor];
+    _automaticallyAdjustContentInsets = YES;
+    _contentInset = UIEdgeInsetsZero;
+    
+    NSString* bundlePath = [[NSBundle mainBundle] pathForResource:@"Scripts" ofType:@"bundle"];
+    resourceBundle = [NSBundle bundleWithPath:bundlePath];
+    
+    WKUserContentController* userController = [[WKUserContentController alloc]init];
+    [userController addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"reactNative"];
+    configuration.userContentController = userController;
+    
+    _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:configuration];
+  }
+  [self setupWebview];
+  return self;
+}
+
 - (instancetype)initWithProcessPool:(WKProcessPool *)processPool
 {
   if(self = [self initWithFrame:CGRectZero])
@@ -89,6 +110,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     config.userContentController = userController;
     
     _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:config];
+  }
+  [self setupWebview];
+  return self;
+}
+
+- (void)setupWebview {
     _webView.UIDelegate = self;
     _webView.navigationDelegate = self;
     _webView.scrollView.delegate = self;
@@ -122,8 +149,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     UILongPressGestureRecognizer* longGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressed:)];
     longGesture.delegate = self;
     [_webView addGestureRecognizer:longGesture];
-  }
-  return self;
+}
+
+- (WKWebView*)webview {
+  return _webView;
 }
 
 - (void)longPressed:(UILongPressGestureRecognizer*)sender {
@@ -726,7 +755,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       return;
     }
   }
-  
+
+  if (!self.delegate || !_onShouldStartLoadWithRequest) {
+    NSLog(@"Setup wrong, allow as default");
+    return decisionHandler(WKNavigationActionPolicyAllow);
+  }
+
   // skip this for the JS Navigation handler
   if (!isJSNavigation && _onShouldStartLoadWithRequest) {
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
@@ -915,14 +949,17 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures
 {
   NSString *scheme = navigationAction.request.URL.scheme;
-  if ((navigationAction.targetFrame.isMainFrame || _openNewWindowInWebView) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"])) {
+  if ((navigationAction.targetFrame.isMainFrame || _openNewWindowInWebView) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"about"])) {
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
     [event addEntriesFromDictionary: @{
                                        @"url": (navigationAction.request.URL).absoluteString,
                                        @"navigationType": @(navigationAction.navigationType)
                                        }];
-    if (![self.delegate webView:self shouldCreateNewWindow:event withCallback:_onShouldCreateNewWindow]) {
+    CRAWKWebView* wkWebView = [self.delegate webView:self shouldCreateNewWindow:event withConfiguration:configuration withCallback:_onShouldCreateNewWindow];
+    if (!wkWebView) {
       [webView loadRequest:navigationAction.request];
+    } else {
+      return wkWebView.webview;
     }
   } else {
     UIApplication *app = [UIApplication sharedApplication];

@@ -36,7 +36,9 @@ RCT_ENUM_CONVERTER(UIScrollViewKeyboardDismissMode, (@{
 @implementation CRAWKWebViewManager
 {
   NSMutableDictionary* shouldStartRequestConditions;
-  NSMutableDictionary* shouldCreateWindowConditions;
+  NSConditionLock* createNewWindowCondition;
+  BOOL createNewWindowResult;
+  CRAWKWebView* newWindow;
 }
 
 RCT_EXPORT_MODULE()
@@ -45,14 +47,14 @@ RCT_EXPORT_MODULE()
     self = [super init];
     
     shouldStartRequestConditions = @{}.mutableCopy;
-    shouldCreateWindowConditions = @{}.mutableCopy;
     return self;
 }
 
 - (UIView *)view
 {
-  CRAWKWebView *webView = [[CRAWKWebView alloc] initWithProcessPool:[WKProcessPool sharedProcessPool]];
+  CRAWKWebView *webView = newWindow ? newWindow : [[CRAWKWebView alloc] initWithProcessPool:[WKProcessPool sharedProcessPool]];
   webView.delegate = self;
+  newWindow = nil;
   return webView;
 }
 
@@ -269,25 +271,29 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
   }
 }
 
-- (BOOL)webView:(__unused CRAWKWebView *)webView
+- (CRAWKWebView*)webView:(__unused CRAWKWebView *)webView
 shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
-   withCallback:(RCTDirectEventBlock)callback
+  withConfiguration:(WKWebViewConfiguration*)configuration
+  withCallback:(RCTDirectEventBlock)callback
 {
-  NSConditionLock* condition = [[NSConditionLock alloc] initWithCondition:arc4random()];
-  NSString* key = @(condition.condition).stringValue;
-  [shouldCreateWindowConditions setObject:@{@"result": @(YES), @"condition": condition} forKey:key];
-  request[@"lockIdentifier"] = @(condition.condition);
+  createNewWindowCondition = [[NSConditionLock alloc] initWithCondition:arc4random()];
+  createNewWindowResult = YES;
+  request[@"lockIdentifier"] = @(createNewWindowCondition.condition);
   callback(request);
   
   // Block the main thread for a maximum of 250ms until the JS thread returns
-  if ([condition lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
-    BOOL returnValue = [[[shouldCreateWindowConditions objectForKey:key] objectForKey:@"result"] boolValue];
-    [condition unlock];
-    [shouldCreateWindowConditions removeObjectForKey:key];
-    return returnValue;
+  if ([createNewWindowCondition lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
+    [createNewWindowCondition unlock];
+    createNewWindowCondition = nil;
+    if (createNewWindowResult) {
+      newWindow = [[CRAWKWebView alloc] initWithConfiguration:configuration];
+      return newWindow;
+    } else {
+      return nil;
+    }
   } else {
     RCTLogWarn(@"Did not receive response to shouldCreateNewWindow in time, defaulting to YES");
-    return YES;
+    return nil;
   }
 }
 
@@ -306,14 +312,12 @@ RCT_EXPORT_METHOD(startLoadWithResult:(BOOL)result lockIdentifier:(NSInteger)loc
 
 RCT_EXPORT_METHOD(createNewWindowWithResult:(BOOL)result lockIdentifier:(NSInteger)lockIdentifier)
 {
-  NSString* key = @(lockIdentifier).stringValue;
-  NSConditionLock* condition = [[shouldCreateWindowConditions objectForKey:key] objectForKey:@"condition"];
-  if (condition && [condition tryLockWhenCondition:lockIdentifier]) {
-    [shouldCreateWindowConditions setObject:@{@"result": @(result), @"condition": condition} forKey:key];
-    [condition unlockWithCondition:0];
+  if (createNewWindowCondition && [createNewWindowCondition tryLockWhenCondition:lockIdentifier]) {
+    createNewWindowResult = result;
+    [createNewWindowCondition unlockWithCondition:0];
   } else {
     RCTLogWarn(@"createNewWindowWithResult invoked with invalid lockIdentifier: "
-               "got %zd, expected %zd", lockIdentifier, condition.condition);
+               "got %zd, expected %zd", lockIdentifier, createNewWindowCondition.condition);
   }
 }
 
