@@ -833,6 +833,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
       // a new URL in the WebView before the previous one came back. We can just
       // ignore these since they aren't real errors.
       // http://stackoverflow.com/questions/1024748/how-do-i-fix-nsurlerrordomain-error-999-in-iphone-3-0-os
+
+      NSObject *attempter = [error.userInfo objectForKey:@"_WKRecoveryAttempterErrorKey"];
+      SEL selector = NSSelectorFromString(@"attemptRecovery");
+      if (attempter && [attempter respondsToSelector:selector]) {
+        [attempter performSelector:selector];
+      }
+
       return;
     }
     
