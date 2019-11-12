@@ -52,7 +52,7 @@ typedef enum {
 @property (nonatomic, assign) BOOL scrollToTop;
 @property (nonatomic, assign) CGPoint adjustOffset;
 
-
+- (void)setupUserController;
 - (void)goForward;
 - (void)goBack;
 - (BOOL)canGoBack;

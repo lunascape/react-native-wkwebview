@@ -82,14 +82,17 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     NSString* bundlePath = [[NSBundle mainBundle] pathForResource:@"Scripts" ofType:@"bundle"];
     resourceBundle = [NSBundle bundleWithPath:bundlePath];
     
-    WKUserContentController* userController = [[WKUserContentController alloc]init];
-    [userController addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"reactNative"];
-    configuration.userContentController = userController;
-    
     _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:configuration];
   }
   [self setupWebview];
   return self;
+}
+
+// Only call it if created by initWithConfiguration to avoid WKReloadFrameErrorRecoveryAttempter error 
+- (void)setupUserController {
+    WKUserContentController* userController = [[WKUserContentController alloc]init];
+    [userController addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"reactNative"];
+    _webView.configuration.userContentController = userController;
 }
 
 - (instancetype)initWithProcessPool:(WKProcessPool *)processPool
