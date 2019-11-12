@@ -16,11 +16,9 @@ extern NSString *const RNCJSNavigationScheme;
 @protocol CRAWKWebViewDelegate <NSObject>
 
 - (BOOL)webView:(CRAWKWebView *)webView
-shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
-   withCallback:(RCTDirectEventBlock)callback;
-- (BOOL)webView:(CRAWKWebView *)webView
-shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request
-   withCallback:(RCTDirectEventBlock)callback;
+shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request withCallback:(RCTDirectEventBlock)callback;
+- (nullable CRAWKWebView*)webView:(CRAWKWebView *)webView
+shouldCreateNewWindow:(NSMutableDictionary<NSString *, id> *)request withConfiguration:(WKWebViewConfiguration*)configuration withCallback:(RCTDirectEventBlock)callback;
 
 @end
 
@@ -34,6 +32,7 @@ typedef enum {
 @interface CRAWKWebView : RCTView
 
 - (instancetype)initWithProcessPool:(WKProcessPool *)processPool;
+- (instancetype)initWithConfiguration:(WKWebViewConfiguration *)configuration;
 
 @property (nonatomic, weak) id<CRAWKWebViewDelegate> delegate;
 
