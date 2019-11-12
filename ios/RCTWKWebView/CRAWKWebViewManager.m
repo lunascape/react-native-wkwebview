@@ -54,9 +54,6 @@ RCT_EXPORT_MODULE()
 {
   CRAWKWebView *webView = newWindow ? newWindow : [[CRAWKWebView alloc] initWithProcessPool:[WKProcessPool sharedProcessPool]];
   webView.delegate = self;
-  if (newWindow) {
-    [newWindow setupUserController];
-  }
   newWindow = nil;
   return webView;
 }
